@@ -18,6 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase
+from pgvector.sqlalchemy import Vector
 
 
 class Base(DeclarativeBase):
@@ -69,6 +70,13 @@ class Complaint(Base):
                         comment="Comma-separated list of affected components")
     summary = Column(Text, nullable=True,
                      comment="Full narrative text of the complaint")
+
+    # ── Vector embedding ──────────────────────────────────────────────────
+    # 384-dimensional dense vector produced by all-MiniLM-L6-v2.
+    # Nullable so rows ingested before embedding generation are still valid.
+    # Populated separately by the embedding pipeline in src/rag/.
+    embedding = Column(Vector(384), nullable=True,
+                       comment="384-dim sentence embedding of the summary text")
 
     def __repr__(self) -> str:
         return (

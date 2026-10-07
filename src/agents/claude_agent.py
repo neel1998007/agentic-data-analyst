@@ -26,7 +26,7 @@ import json
 import anthropic
 from dotenv import load_dotenv
 
-from src.agents.tools import count_complaints
+from src.agents.tools import count_complaints, semantic_search_complaints
 
 # ── 1. Load secrets from .env ─────────────────────────────────────────────────
 
@@ -54,13 +54,25 @@ SYSTEM_PROMPT = """You are an expert assistant that answers questions about
 vehicle safety complaints filed with the NHTSA (National Highway Traffic
 Safety Administration).
 
-You have access to a tool called `count_complaints` that queries a live
-database of real complaint records. Use it whenever the user asks how many
-complaints match some criteria (make, model, year, fire, crash involvement,
-etc.).
+You have access to TWO tools for querying a live database of real complaints:
 
-Always interpret and explain the number in plain English — don't just echo
-back the raw integer. If the count is zero, say so clearly."""
+1. count_complaints — Use this for structured, exact filtering: when the user
+   asks how many complaints exist for a specific make, model, year, or asks
+   about fire or crash involvement. All filters are optional and combinable.
+
+2. semantic_search_complaints — Use this when the user describes a symptom,
+   situation, or experience rather than asking for an exact count or structured
+   filter (e.g. "find complaints about sudden loss of power", "what complaints
+   mention steering problems", "show me cases where the car caught fire while
+   parked"). This searches by meaning, not keywords.
+
+Choose whichever tool best fits the question. If the question can be answered
+from general knowledge without querying the database, answer directly without
+calling either tool.
+
+Always explain results in plain English. For counts, interpret the number
+meaningfully. For semantic results, summarise the key themes you see across
+the matching complaints."""
 
 # ── 4. Tool schema ────────────────────────────────────────────────────────────
 #
@@ -74,9 +86,11 @@ TOOLS: list[dict] = [
         "name": "count_complaints",
         "description": (
             "Count the number of vehicle safety complaints in the NHTSA "
-            "database that match the given filters. All parameters are "
-            "optional — omitting a parameter means 'don't filter on it'. "
-            "Returns an integer count."
+            "database that match the given structured filters. Use this when "
+            "the user asks 'how many' complaints exist for a specific make, "
+            "model, year, or asks about fire or crash involvement. "
+            "All parameters are optional — omitting a parameter means "
+            "'don't filter on it'. Returns an integer count."
         ),
         "input_schema": {
             "type": "object",
@@ -118,10 +132,44 @@ TOOLS: list[dict] = [
                     ),
                 },
             },
-            # No required fields — every argument is optional.
             "required": [],
         },
-    }
+    },
+    {
+        "name": "semantic_search_complaints",
+        "description": (
+            "Find complaints whose text is semantically similar to a "
+            "natural-language description. Use this when the user describes "
+            "a symptom, experience, or situation rather than asking for an "
+            "exact count or structured filter — e.g. 'find complaints about "
+            "sudden loss of power', 'show me cases where the steering failed', "
+            "or 'what complaints mention the battery overheating'. "
+            "Returns up to `limit` matching complaint records with their "
+            "summaries, ordered by relevance."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "A natural-language description of the kind of "
+                        "complaint to find, e.g. 'engine stalled on highway' "
+                        "or 'car accelerated without driver input'. "
+                        "Searches by meaning, not exact keywords."
+                    ),
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": (
+                        "Maximum number of complaints to return. "
+                        "Defaults to 5 if omitted."
+                    ),
+                },
+            },
+            "required": ["query"],
+        },
+    },
 ]
 
 # ── 5. Tool dispatcher ────────────────────────────────────────────────────────
@@ -130,7 +178,8 @@ TOOLS: list[dict] = [
 # Python callable.  Add new tools here as the agent grows.
 
 TOOL_REGISTRY: dict[str, callable] = {
-    "count_complaints": count_complaints,
+    "count_complaints":           count_complaints,
+    "semantic_search_complaints": semantic_search_complaints,
 }
 
 
@@ -311,7 +360,7 @@ def ask_agent(user_question: str) -> str:
 # ── 7. Smoke-test ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    question = "How many fire-related complaints were filed for the Tesla Model 3?"
+    question = "car's tire got puncture while driving"
     print("=" * 60)
     print(f"Question: {question}")
     print("=" * 60)

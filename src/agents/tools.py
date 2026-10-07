@@ -17,11 +17,21 @@ from __future__ import annotations
 
 from typing import Optional
 
+from sentence_transformers import SentenceTransformer
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from src.db.connection import get_engine, get_session_factory
 from src.db.models import Complaint
+
+# ── Embedding model (loaded once at import time) ───────────────────────────────
+# Loading a SentenceTransformer downloads weights and warms the tokeniser —
+# this takes a few seconds and must NOT be done inside a per-call function.
+# By placing it here at module level it runs exactly once, no matter how many
+# times semantic_search_complaints() is called.
+
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+_embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -197,6 +207,84 @@ def get_sample_complaints(
         session.close()
 
 
+def semantic_search_complaints(query: str, limit: int = 5) -> list[dict]:
+    """
+    Find complaints whose summary text is semantically similar to ``query``.
+
+    Unlike :func:`count_complaints` and :func:`get_sample_complaints`, which
+    do exact structured filtering (make == "Tesla", fire == True, etc.), this
+    function understands *meaning*.  A query like "engine suddenly stalled on
+    the highway" will match complaints that describe that experience even if
+    none of the exact words appear — because both the query and the complaints
+    are projected into the same 384-dimensional embedding space, and proximity
+    in that space corresponds to semantic similarity.
+
+    Internally this uses pgvector's cosine distance operator (<=>), which
+    measures the angle between two vectors.  Complaints are ranked from most
+    similar (smallest angle / distance) to least similar.
+
+    Requires the ``embedding`` column to be populated for rows to surface in
+    results.  Run ``python -m scripts.generate_embeddings`` first if needed.
+
+    Parameters
+    ----------
+    query : str
+        A natural-language description of the kind of complaint to find,
+        e.g. "car suddenly lost power while driving".
+    limit : int, optional
+        Maximum number of results to return (default: 5).
+
+    Returns
+    -------
+    list[dict]
+        Each dict contains: odi_number, make, model, model_year, components,
+        and summary — the fields most useful for presenting results to a user
+        or passing as context to an LLM.
+
+    Examples
+    --------
+    >>> semantic_search_complaints("sudden unintended acceleration")
+    >>> semantic_search_complaints("battery fire while parked", limit=10)
+    """
+    # ── Step 1: Embed the query using the pre-loaded model ────────────────
+    # We reuse the module-level _embedding_model so we never pay the
+    # model-loading cost more than once per process.
+    query_vector = _embedding_model.encode(query, convert_to_numpy=True).tolist()
+
+    # ── Step 2: Build the cosine-distance query ───────────────────────────
+    # pgvector exposes <=> as .cosine_distance() on the column comparator.
+    # ORDER BY distance ASC → most similar row first.
+    # We also filter for rows where embedding IS NOT NULL so that any rows
+    # without embeddings are silently excluded rather than causing errors.
+    session = _get_session()
+    try:
+        stmt = (
+            select(Complaint)
+            .where(Complaint.embedding.is_not(None))
+            .order_by(Complaint.embedding.cosine_distance(query_vector))
+            .limit(limit)
+        )
+        rows = session.execute(stmt).scalars().all()
+
+        # ── Step 3: Serialise to plain dicts ──────────────────────────────
+        # Return only the fields useful for RAG context / display.
+        # The embedding vector itself is intentionally excluded — it's large
+        # and meaningless to a human or an LLM reading the result.
+        return [
+            {
+                "odi_number": row.odi_number,
+                "make":       row.make,
+                "model":      row.model,
+                "model_year": row.model_year,
+                "components": row.components,
+                "summary":    row.summary,
+            }
+            for row in rows
+        ]
+    finally:
+        session.close()
+
+
 # ── Quick smoke-test ──────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -212,3 +300,14 @@ if __name__ == "__main__":
             print(f"       Fire: {c['fire']}  Crash: {c['crash']}")
             summary_preview = (c["summary"] or "")[:120]
             print(f"       Summary: {summary_preview}{'...' if len(c['summary'] or '') > 120 else ''}")
+
+    print("\n" + "─" * 60)
+    print("Running smoke test: semantic_search_complaints('car suddenly lost power while driving')")
+    results = semantic_search_complaints("car suddenly lost power while driving", limit=3)
+    if not results:
+        print("  No results — have you run generate_embeddings.py yet?")
+    for i, r in enumerate(results, 1):
+        print(f"\n  [{i}] ODI {r['odi_number']} | {r['model_year']} {r['make']} {r['model']}")
+        print(f"       Components: {r['components']}")
+        preview = (r["summary"] or "")[:150]
+        print(f"       Summary: {preview}{'...' if len(r['summary'] or '') > 150 else ''}")

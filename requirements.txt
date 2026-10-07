@@ -5,3 +5,5 @@ python-dotenv
 anthropic
 sqlalchemy
 requests
+sentence-transformers
+pgvector
