@@ -1,0 +1,244 @@
+{
+  "run_timestamp": "20261009_190415",
+  "total_cases": 10,
+  "fully_passed": 5,
+  "pending": 5,
+  "results": [
+    {
+      "id": "count_crash_civic",
+      "question": "How many complaints involved a crash for the Honda Civic?",
+      "answer": "The database has **15 complaints** for the Honda Civic that involved a crash.\n\nThis count covers all model years. It only includes complaints where the filer reported a crash. I didn't pull the total number of Civic complaints, so I can't say what share of them involved crashes. I can look that up, narrow the count to a model year, or search the crash complaints for common themes such as steering, braking, or airbags.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "crash": true
+        }
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 15,
+      "pending_llm_judge": false,
+      "overall_pass": true
+    },
+    {
+      "id": "count_fire_tesla",
+      "question": "How many fire complaints were filed for the Tesla Model 3?",
+      "answer": "There are **5 complaints** in the NHTSA database that involve a fire for the Tesla Model 3.\n\nThis count covers every model year in the database. Five is a small number. I didn't compare it with the Model 3's total complaints, so I can't say what share of them involve fire. I can also check how many of these fires came with a crash, break the count down by model year, or pull up the complaint text to see what happened.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Tesla",
+          "model": "Model 3",
+          "fire": true
+        }
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 5,
+      "pending_llm_judge": false,
+      "overall_pass": true
+    },
+    {
+      "id": "count_total_camry",
+      "question": "How many total complaints exist for the Toyota Camry?",
+      "answer": "The database has **274 complaints** for the Toyota Camry. That count covers all model years and includes complaints with or without a crash or fire.\n\nFor context, that's the number of complaints in this database. It isn't necessarily every complaint NHTSA has ever received. I can break it down by model year, or count how many involved a crash or fire, if you'd like.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Toyota",
+          "model": "Camry"
+        }
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 274,
+      "pending_llm_judge": false,
+      "overall_pass": true
+    },
+    {
+      "id": "count_fire_and_crash",
+      "question": "How many complaints involve both a fire and a crash for the Tesla Model 3?",
+      "answer": "There are **3 complaints** in the NHTSA database for the Tesla Model 3 that involve both a fire and a crash.\n\nThat is a very small number. Complaints that report both a crash and a fire are rare for this model. The count only includes complaints where both boxes were flagged. It leaves out complaints that report only a fire or only a crash.\n\nI can also pull the total number of Model 3 complaints for comparison, or look up the text of these complaints to see what happened.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Tesla",
+          "model": "Model 3",
+          "fire": true,
+          "crash": true
+        }
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 3,
+      "pending_llm_judge": false,
+      "overall_pass": true
+    },
+    {
+      "id": "semantic_brakes_own",
+      "question": "Find complaints about brakes engaging on their own",
+      "answer": "I found 10 complaints about brakes applying without driver input. This is often called \"phantom braking.\" The search returned the closest matches, so it isn't a full count of every such complaint.\n\n**Main themes**\n\n- **Tesla Model 3 (2021) accounts for 9 of the 10.**\n  - Drivers describe sudden, sometimes hard, braking on the highway with nothing ahead of the car.\n  - It happened with Autopilot on, and also with only cruise control or Autosteer on. One owner said their car doesn't have Full Self Driving.\n  - Frequency ranges from \"several times per week\" (ODI 11452966) to repeated events over two 6-hour drives (ODI 11493216).\n  - Some drivers say it was triggered by curves, oncoming traffic, or a vehicle stopped on the shoulder (ODI 11452947, 11467279). Others saw no trigger at all.\n\n- **Safety concern is rear-end collisions.**\n  - Drivers say the car slows sharply with no warning, so a following vehicle could hit them.\n  - Two drivers report nearly being rear-ended (ODI 11467433).\n  - Several avoided trouble by pressing the accelerator right away.\n  - Some now avoid cruise control or Autopilot altogether.\n  - None of the summaries mention an actual crash.\n\n- **Not only Tesla.** A 2020 Toyota Camry owner (ODI 11503042) reported the automatic emergency braking activating several times at under 30 mph when passing another car. The system seemed to misjudge a collision threat. It was startling but caused no harm.\n\n- **Components.** Most complaints are filed under Forward Collision Avoidance and/or Service Brakes. That points to the automated driver-assist braking system rather than a mechanical brake fault.\n\nI can also check how many complaints exist for a specific make or model, or how many involve crashes. I can search for other makes too, to see whether the pattern is wider than Tesla.",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "brakes engaging on their own without driver input, automatic braking suddenly applied",
+          "limit": 10
+        }
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": null,
+      "expected_value": null,
+      "pending_llm_judge": true,
+      "overall_pass": null
+    },
+    {
+      "id": "semantic_tire_blowout",
+      "question": "Any complaints about tires blowing out while driving?",
+      "answer": "Yes. The database has several complaints about tires blowing out or failing while driving. Some of the results were only loosely related, and I left those out.\n\n**Clear tire blowout complaints**\n- **2020 Honda Civic (Continental tires):** The rear passenger tire blew out at 75 mph. The car drifted off the road and crashed into a median near oncoming traffic. It was declared a total loss. The tires were original equipment, and the failure came at about 11,000 miles.\n- **2020 Honda Civic (Goodyear Eagle Sport tires):** The tread came off at the seam on the rear driver's side tire. The other tires had bubbles, and the owner had three replaced. The owner suspects poor rubber integrity or retreaded tires sold as new. The car had under 25k miles.\n- **2020 Toyota Camry:** The front passenger tire blew out at about 13,300 miles. The original tire was still on the car. The driver got to a safe spot and put on the spare.\n- **2021 Tesla Model 3 (Pirelli PZero tires):** The front left tire blew out after about 4,500 miles. Two months later, the rear left tire had a sidewall bubble at about 5,400 miles. The owner believes the tires are defective.\n\n**Related tire and wheel failures (not true blowouts)**\n- **2021 Tesla Model 3:** A valve stem broke off and shot out of the tire when the owner removed the cap. The tire then deflated. This happened after a low-pressure warning, at a gas station and not at speed.\n- **Two 2021 Tesla Model 3 complaints:** Suspension or control arm bolts came loose, and the whole wheel separated from the car. This is a different problem from a tire failing. It is still a serious hazard.\n\n**Themes**\n- Most blowouts involved **original-equipment tires on fairly new, low-mileage cars**. Owners suspected manufacturing defects such as tread separation, sidewall bubbles, or poor rubber quality.\n- Several complaints involved **high-speed driving**. One ended in a crash. In the others, the drivers kept control.\n- Owners often reported that other tires on the same car showed warning signs, like bubbles, which suggests a possible batch or design problem.\n\nI can narrow this to a specific make, model, or year. I can also count how many of these complaints involved crashes.",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "tire blew out while driving",
+          "limit": 10
+        }
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": null,
+      "expected_value": null,
+      "pending_llm_judge": true,
+      "overall_pass": null
+    },
+    {
+      "id": "semantic_fsd_braking",
+      "question": "Describe issues people have had with Tesla's self-driving braking",
+      "answer": "**Overview:** The Tesla complaints I found about self-driving braking are almost all about \"phantom braking.\" This is when the car brakes hard with no obstacle ahead. I read about 20 results. Nearly all were 2021 Model 3 complaints filed under \"Forward Collision Avoidance,\" often along with \"Vehicle Speed Control\" or \"Service Brakes.\" That is a sample, not a full count, and the 2021 Model 3 focus may partly reflect which complaints the search returned.\n\n**Common themes**\n\n1. **Sudden, forceful braking with nothing there.** Drivers using Autopilot, Traffic-Aware Cruise Control, or Full Self-Driving say the car slammed on the brakes on clear roads. Typical speed drops were 65\u201380 mph down to 20\u201345 mph within seconds.\n\n2. **Frequency.** Some drivers describe occasional events. Others describe it as constant:\n   - about once every 15\u201320 minutes on highway drives\n   - seven emergency-braking events in 5 hours in a nearly new car\n   - about 20 events during a 2\u20133 hour drive in a company car\n   - one driver who said it happened \"every day\" on a work commute\n\n3. **Suspected triggers.** Drivers named several, though many events seemed to have no cause:\n   - passing or meeting semi trucks, RVs, and trailers\n   - shadows, puddles, and tar patches\n   - small hills and off-ramps\n   - changes in pavement color, such as asphalt to concrete\n   - cars in adjacent lanes or on curves\n\n4. **Near-miss rear-end collisions.** Many drivers said they were almost hit by tailgating cars or semis. Others said they were lucky nobody was behind them. The complaints describe the hazard as being to following traffic.\n\n5. **Not limited to Full Self-Driving.** Some owners said it happens with basic cruise control or automatic emergency braking even without FSD. One owner who hadn't bought FSD said the camera-based system still braked on its own.\n\n6. **Newer software.** One FSD (Supervised) user said it began \"about three updates ago.\" The car brakes for shadows and puddles on secondary roads.\n\n7. **Feeling brushed off by Tesla.** Several owners said service found \"no malfunction.\" One said Tesla called the features beta, and another said Tesla recommended not using Autopilot. Others said they were told Tesla knew about the problem and was working on a fix. Drivers said the problem continued for months.\n\n8. **Drivers stopped using the feature.** Some said they disengaged Autopilot, stopped using it, or no longer trust it. One driver pressed the accelerator after a brake event and ended up above the speed limit.\n\nI can also check counts, for example crash-involved Tesla complaints by model or year. I can search for the opposite problem too, where the car failed to brake for an obstacle.",
+      "tools_called": [
+        "semantic_search_complaints",
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "Tesla Autopilot or Full Self-Driving phantom braking, sudden unexpected braking",
+          "limit": 10
+        },
+        {
+          "query": "Tesla self-driving failed to brake or automatic emergency braking did not stop for obstacle",
+          "limit": 10
+        }
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": null,
+      "expected_value": null,
+      "pending_llm_judge": true,
+      "overall_pass": null
+    },
+    {
+      "id": "semantic_wheels_falling_off",
+      "question": "Tell me about problems people had with their wheels falling off",
+      "answer": "I found a small number of relevant complaints. The database seems to cover mostly 2020 Honda Civics and 2021 Tesla Model 3s, so this isn't a full picture of wheel-separation problems across all vehicles. Four of the ten results were about wheels coming off or the suspension failing.\n\n**Tesla Model 3 (2021): fasteners working loose**\n- **ODI 11455724:** The lateral link bolts came unfastened. The link shifted out of place and damaged several suspension parts. The wheel then separated from the car, which could no longer be driven.\n- **ODI 11499966:** The control arm bolts that hold the wheel on slowly unscrewed until they fell out. The owner reported no warning at all, \"not even a wobble, shimmy, clunk.\" The wheel simply came off.\n  - The owner said a recall covered other 2021 Model 3s but not their VIN.\n  - Tesla inspected and repaired the car.\n  - The owner worried that a detached, inflated tire could be pulled under the car at speed. They said it might flip the car, rupture the battery pack, or fly into other vehicles.\n\n**Honda Civic (2020): broken wheel studs**\n- **ODI 11748079:** On the passenger side, 4 of the 5 lug bolts snapped off with the lug nuts still attached. The wheel separated while the car was moving, causing a crash and about $5,500 in damage. The dashboard gave no warning.\n- **ODI 11705138:** The driver heard a loud thump on the highway in the rain, and the wheel \"went sideways.\" No impact with anything occurred. This looks like a suspension failure, but the report doesn't say the wheel came off.\n\n**Common themes**\n- **Different failure points:** On the Teslas, the suspension bolts loosened. On the Civic, the wheel studs broke.\n- **No warning:** Owners reported no vibration, noise or dashboard alert before the failure.\n- **Safety risk:** The failures happened while driving, and one led to a crash.\n- **Recall gaps:** One owner said their car was left out of a related recall.\n\nThe other results, such as steering lockups, brake failures and a peeling steering wheel, were not about wheels detaching.\n\nI can count the complaints in the wheels category for a given make, model or year, or search for more specific cases, such as lug nut failures or suspension bolts.",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "wheel fell off while driving",
+          "limit": 10
+        }
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": null,
+      "expected_value": null,
+      "pending_llm_judge": true,
+      "overall_pass": null
+    },
+    {
+      "id": "out_of_scope_question",
+      "question": "What's the capital of France?",
+      "answer": "The capital of France is Paris.\n\nThat's general knowledge, so I didn't need to query the NHTSA complaints database. If you want to look into vehicle safety complaints, I can count complaints by make, model, year, fire, or crash involvement. I can also search for complaints that describe a particular symptom.",
+      "tools_called": [],
+      "tool_inputs": [],
+      "expected_tools": [],
+      "tool_selection_correct": true,
+      "check_type": "no_tool",
+      "content_check_passed": true,
+      "expected_value": null,
+      "pending_llm_judge": false,
+      "overall_pass": true
+    },
+    {
+      "id": "parallel_brake_and_tire",
+      "question": "Are there complaints about both brake issues and tire issues for Tesla?",
+      "answer": "Yes. Tesla has complaints about both brakes and tires. The two sets look quite different from each other.\n\n**Brake complaints**\n- The results were almost all 2021 Model 3 complaints about \"phantom braking.\"\n- Owners say the car brakes hard for no reason while Autopilot, Full Self-Driving or adaptive cruise control is on. It happens at highway speeds and on secondary roads.\n- Several drivers said they were nearly rear-ended. Some said Tesla service found no fault.\n- The complaints are filed mainly under Forward Collision Avoidance, Vehicle Speed Control and Service Brakes. They describe a driver-assist software problem more than worn or failed brake hardware.\n\n**Tire complaints**\n- Tire complaints are also there, again mostly on the 2021 Model 3.\n- One owner reported two passenger-side tires failing at once on a loaner car after 7.7 miles.\n- One reported a Pirelli tire blowout after 4,500 miles and a sidewall bubble on another tire soon after.\n- One reported a valve stem that broke and shot out, deflating the tire.\n- One reported an aftermarket installation with the wrong load-rated tires and low pressure.\n- A few related complaints involve wheels or suspension rather than tires. They include control arm bolts that came loose and a wheel that fell off in a fatal crash report.\n\nI ran a semantic search, which returns the closest matches, not an exact count. It also can't show whether any single complaint mentions both brakes and tires. If you want, I can count Tesla complaints by model, year or crash involvement, or search for a more specific problem.",
+      "tools_called": [
+        "semantic_search_complaints",
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "Tesla brake problems, brakes failing or not working",
+          "limit": 10
+        },
+        {
+          "query": "Tesla tire problems, tire blowout, tire wear or tire pressure issues",
+          "limit": 10
+        }
+      ],
+      "expected_tools": [
+        "count_complaints",
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": false,
+      "check_type": "llm_judge",
+      "content_check_passed": null,
+      "expected_value": null,
+      "pending_llm_judge": true,
+      "overall_pass": null
+    }
+  ]
+}

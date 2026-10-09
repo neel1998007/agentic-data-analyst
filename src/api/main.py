@@ -81,7 +81,7 @@ def ask(request: AskRequest) -> AskResponse:
     logger.info("Received question: %s", request.question)
 
     try:
-        answer = ask_agent(request.question)
+        result = ask_agent(request.question)
     except Exception as exc:
         logger.exception("ask_agent() raised an unexpected error: %s", exc)
         raise HTTPException(
@@ -89,4 +89,4 @@ def ask(request: AskRequest) -> AskResponse:
             detail=f"The agent encountered an error: {exc}",
         )
 
-    return AskResponse(answer=answer)
+    return AskResponse(answer=result["answer"])

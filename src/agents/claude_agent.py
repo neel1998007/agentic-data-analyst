@@ -73,7 +73,15 @@ calling either tool.
 
 Always explain results in plain English. For counts, interpret the number
 meaningfully. For semantic results, summarise the key themes you see across
-the matching complaints."""
+the matching complaints.
+
+When summarizing patterns across multiple retrieved complaints, do not use
+absolute language like 'every case' or 'all owners' unless it is literally
+true for every single retrieved record. If one or more records differ in a
+meaningful way, explicitly call out that exception rather than smoothing
+over it. Be precise about WHO said what when a complaint involves multiple
+parties (e.g., the vehicle owner vs. the manufacturer) - do not blur
+attribution between them."""
 
 # ── 4. Tool schema ────────────────────────────────────────────────────────────
 #
@@ -184,13 +192,10 @@ TOOL_REGISTRY: dict[str, callable] = {
 }
 
 
-def _execute_tool(tool_name: str, tool_input: dict) -> str:
+def _execute_tool(tool_name: str, tool_input: dict) -> tuple:
     """
     Look up the requested tool by name, call it with the arguments Claude
-    supplied, and return the result as a JSON string.
-
-    Returning JSON (rather than a plain integer) future-proofs this function:
-    tools that return dicts or lists will also serialise correctly.
+    supplied, and return (raw_result, json_str).
 
     Parameters
     ----------
@@ -199,8 +204,8 @@ def _execute_tool(tool_name: str, tool_input: dict) -> str:
 
     Returns
     -------
-    str
-        A JSON-encoded representation of the tool's return value.
+    tuple
+        (raw_result, json_str)
 
     Raises
     ------
@@ -214,8 +219,8 @@ def _execute_tool(tool_name: str, tool_input: dict) -> str:
         )
 
     fn = TOOL_REGISTRY[tool_name]
-    result = fn(**tool_input)           # call the real Python function
-    return json.dumps(result)           # serialise for the API message
+    raw_result = fn(**tool_input)       # call the real Python function
+    return raw_result, json.dumps(raw_result)           # serialise for the API message
 
 
 # ── 6. Main agent function ────────────────────────────────────────────────────
@@ -296,7 +301,12 @@ def ask_agent(user_question: str) -> str:
         get_client().update_current_span(output={"answer": direct_text})
         # Flush ensures the trace is sent before the process exits.
         get_client().flush()
-        return direct_text
+        return {
+            "answer":       direct_text,
+            "tools_called": [],
+            "tool_inputs":  [],
+            "tool_results": [],
+        }
 
     # ── Step C: Collect ALL tool_use blocks ──────────────────────────────
     # Claude may request multiple tools in parallel in a single turn.
@@ -315,17 +325,28 @@ def ask_agent(user_question: str) -> str:
     # one failing tool doesn't abort the others — the error becomes the
     # tool_result content so Claude can still reason about partial data.
 
+    # Track which tools were called and with what arguments, in order.
+    # These are collected here so both return paths (direct answer and
+    # tool-assisted answer) have access to the same list.
+    tools_called: list[str] = []
+    tool_inputs:  list[dict] = []
+    tool_results_data: list = []
+
     tool_results = []
     for tb in tool_use_blocks:
         print(f"[agent] Calling: {tb.name}({tb.input})")
+        tools_called.append(tb.name)
+        tool_inputs.append(dict(tb.input))  # dict() copies the Pydantic mapping
         try:
-            result_str = _execute_tool(tb.name, tb.input)
+            raw_result, result_str = _execute_tool(tb.name, tb.input)
         except Exception as exc:
-            result_str = json.dumps({"error": str(exc)})
+            raw_result = {"error": str(exc)}
+            result_str = json.dumps(raw_result)
             print(f"[agent] WARNING tool '{tb.name}' raised: {exc}")
         else:
             print(f"[agent] '{tb.name}' returned: {result_str}")
 
+        tool_results_data.append(raw_result)
         tool_results.append({
             "type": "tool_result",
             "tool_use_id": tb.id,   # must match the id in the assistant turn
@@ -401,7 +422,12 @@ def ask_agent(user_question: str) -> str:
     # Record the tool-assisted final answer as the output of the root span.
     get_client().update_current_span(output={"answer": final_text})
     get_client().flush()
-    return final_text
+    return {
+        "answer":       final_text,
+        "tools_called": tools_called,
+        "tool_inputs":  tool_inputs,
+        "tool_results": tool_results_data,
+    }
 
 
 # ── 7. CLI entry-point ───────────────────────────────────────────────────────
@@ -437,6 +463,12 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"Question: {question}")
     print("=" * 60)
-    answer = ask_agent(question)
+    result = ask_agent(question)
     print("\nAnswer:")
-    print(answer)
+    print(result["answer"])
+    if result["tools_called"]:
+        print("\nTools called:")
+        for name, inputs in zip(result["tools_called"], result["tool_inputs"]):
+            print(f"  {name}({inputs})")
+    else:
+        print("\n(No tools were called — answer came from general knowledge.)")  

@@ -1,0 +1,790 @@
+{
+  "run_timestamp": "20261009_201600",
+  "total_cases": 10,
+  "fully_passed": 5,
+  "failed": 5,
+  "results": [
+    {
+      "id": "count_crash_civic",
+      "question": "How many complaints involved a crash for the Honda Civic?",
+      "answer": "The database has **15 complaints** for the Honda Civic in which a crash was involved.\n\nThat count covers every model year in the database. It only includes complaints where the filer said a crash happened. Complaints about problems that didn't lead to a crash aren't in it.\n\nI can also pull the total number of Civic complaints to show what share involved crashes. I can break the count down by model year, or search the crash complaints for common themes such as steering, braking, or airbag problems.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "crash": true
+        }
+      ],
+      "tool_results": [
+        15
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 15,
+      "judge_result": null,
+      "overall_pass": true
+    },
+    {
+      "id": "count_fire_tesla",
+      "question": "How many fire complaints were filed for the Tesla Model 3?",
+      "answer": "There are **5 complaints** in the NHTSA database that involve a fire for the Tesla Model 3.\n\nThat's a small number. The count only covers complaints where the reporter said a fire was involved. It doesn't tell you how many of those fires were serious, or whether the car itself caused them. I can also count all Model 3 complaints to show how large a share these 5 are. I can also search for the text of the fire complaints to see what happened in each one.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Tesla",
+          "model": "Model 3",
+          "fire": true
+        }
+      ],
+      "tool_results": [
+        5
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 5,
+      "judge_result": null,
+      "overall_pass": true
+    },
+    {
+      "id": "count_total_camry",
+      "question": "How many total complaints exist for the Toyota Camry?",
+      "answer": "The database has **274 complaints** for the Toyota Camry. That number includes every model year, with or without a fire or crash.\n\nIt only covers the complaints in this database. It isn't an official count of every Camry problem ever reported. If you'd like, I can break it down by model year, count the complaints that involved a fire or a crash, or search for common symptoms such as unintended acceleration or braking problems.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Toyota",
+          "model": "Camry"
+        }
+      ],
+      "tool_results": [
+        274
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 274,
+      "judge_result": null,
+      "overall_pass": true
+    },
+    {
+      "id": "count_fire_and_crash",
+      "question": "How many complaints involve both a fire and a crash for the Tesla Model 3?",
+      "answer": "There are **3 complaints** in the NHTSA database for the Tesla Model 3 that report both a fire and a crash.\n\nThat is a very small number. Complaints that involve both are rare, and these three are the ones where the reporter flagged both a crash and a fire. I can pull up the text of those complaints to see what happened. I can also compare this with the number of Model 3 complaints that involve only a fire or only a crash.",
+      "tools_called": [
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "make": "Tesla",
+          "model": "Model 3",
+          "fire": true,
+          "crash": true
+        }
+      ],
+      "tool_results": [
+        3
+      ],
+      "expected_tools": [
+        "count_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "exact_count",
+      "content_check_passed": true,
+      "expected_value": 3,
+      "judge_result": null,
+      "overall_pass": true
+    },
+    {
+      "id": "semantic_brakes_own",
+      "question": "Find complaints about brakes engaging on their own",
+      "answer": "I searched the database and found 10 closely matching complaints. All of them are about the same problem, usually called \"phantom braking.\" Every one involves a 2021 Tesla Model 3.\n\n**Common themes**\n- **Braking with no obstacle.** Drivers say the car braked hard when nothing was in front of it. Two examples are an empty road and a gentle bend with no visible hazard.\n- **Driver-assist features were on.** Most reports happened with Autopilot or adaptive/traffic-aware cruise control engaged, usually on highways at speeds up to about 65 MPH. One owner said the car has no Full Self Driving and still braked on its own with plain cruise control.\n- **Repeat events.** Many drivers describe it happening several times. Reports range from \"2\u20133 times\" to \"several times per week.\"\n- **Possible triggers.** Some drivers linked it to curves in the road, oncoming traffic in the next lane, or a vehicle stopped on the shoulder.\n- **Rear-end collision risk.** Several drivers said the sudden slowdown could cause a rear-end crash. One said they were nearly rear-ended twice. Others said they were able to react quickly by pressing the accelerator or taking control.\n- **Components cited.** The complaints are filed mostly under Forward Collision Avoidance, often along with Service Brakes. One also lists Vehicle Speed Control.\n\n**Example ODI numbers:** 11452966, 11452987, 11452864, 11450366, 11514915, 11452947, 11452918, 11457054, 11467279, 11467433.\n\nThe results all came from Tesla, but that may reflect how the search ranked matches. It doesn't show that other makes don't have the problem. I can search for other makes, count Tesla Model 3 complaints, or check how many involved crashes. Which would you like?",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "brakes engaging on their own without driver input",
+          "limit": 10
+        }
+      ],
+      "tool_results": [
+        [
+          {
+            "odi_number": 11452966,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES",
+            "summary": "Several times per week, my vehicle brakes automatically for no apparent reason."
+          },
+          {
+            "odi_number": 11452987,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "I was driving my car and had it on autopilot. The road was empty and all of a sudden the car decided to apply brakes when nothing was infront of it. I was able to take control instantly to prevent a sudden stop however I was lucky there were no cars behind me"
+          },
+          {
+            "odi_number": 11452864,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "While driving on autopilot on the highway at about 65MPH the car applied the brakes for no reason. The car descends in speed aggressively and can easily cause a rear end collision. This has happened randomly before as well."
+          },
+          {
+            "odi_number": 11450366,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "Car applied brakes while cruise control was engaged. There were no other vehicles around (either in front, approaching, or behind)"
+          },
+          {
+            "odi_number": 11514915,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "The car will apply the brakes suddenly when in control when there is no obstacle to be avoided."
+          },
+          {
+            "odi_number": 11452947,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "On several occasions while driving in the highway with AutoPilot engaged for adaptive cruise control, the car has suddenly applied the brakes very hard when there were no hazards in my lane. This has occurred on curves in the road when oncoming traffic was detected in the other lane and also when there has been a vehicle stopped on the shoulder."
+          },
+          {
+            "odi_number": 11452918,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "When car is driving on autopilot on highway,  it slams on the brakes on its own. This has happened 2-3 times."
+          },
+          {
+            "odi_number": 11457054,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "I have a lot of unexpected braking problems for no reason"
+          },
+          {
+            "odi_number": 11467279,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "While using cruise control on the highway, I was rounding a slight bend in the road and the automatic braking system actuated, immediately slamming on the brakes and scrubbing off significant speed.  Luckily I was close to the accelerator pedal and was able to quickly react by applying throttle, but had there been another vehicle following closely, there could have been a collision.  There were no visible objects in or around the road to cause an emergency braking event.  I have not used the cruise control feature since this occurrence, but it had happened twice before with similar circumstances.  Reference \"phantom braking\" phenomenon well documented by many other operators."
+          },
+          {
+            "odi_number": 11467433,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "My car has on several occasions while using cruise control feature engaged, braked unexpectedly at highway speeds when nothing was in front of the car. My Tesla does not have Full Self Driving capabilities, it has also done this emergency braking with Autopilot engaged. It's happened so many times while the Autopilot is engaged, that I never use Autopilot anymore. I have twice nearly been rear ended, (with only cruise control engaged)  by a car following me when this auto-braking happened in highway traffic, forcing me to have to immediately hit the accelerator pedal in response, to avoid being hit from behind after the brakes auto engaged."
+          }
+        ]
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": false,
+      "expected_value": null,
+      "judge_result": {
+        "relevant": false,
+        "grounded": false,
+        "reasoning": "Judge response could not be parsed",
+        "parse_error": true
+      },
+      "overall_pass": false
+    },
+    {
+      "id": "semantic_tire_blowout",
+      "question": "Any complaints about tires blowing out while driving?",
+      "answer": "Yes, the database has several complaints about tires blowing out while driving. These are the clearest ones:\n\n- **2020 Toyota Camry (ODI 11470601):** The front passenger tire blew out at about 13,300 miles on the original tire. The driver reached a safe spot and put on the donut spare.\n- **2020 Toyota Camry (ODI 11289435):** The front tire \"came apart\" while the car was being driven.\n- **2020 Honda Civic (ODI 11434154):** The tread flew off the rear tire at the seam, about a year after purchase and under 25,000 miles. The Goodyear Eagle Sport tires had bubbles, and the owner replaced three of them. The owner suspects poor rubber integrity or retreaded tires sold as new.\n- **2020 Honda Civic (ODI 11440209):** At about 75 mph, the rear passenger tire (original Continental ProContact) blew out suddenly at 11,045 miles. The car drifted off the road and crashed into the median near oncoming traffic. It was declared a total loss.\n- **2021 Tesla Model 3 (ODI 11457255):** The front left Pirelli PZero blew out after about 4,500 miles. After the tire was replaced, the rear left tire developed a sidewall bubble at about 5,400 miles. The owner believes the tires are defective.\n\n**Common themes**\n- **Low mileage and original tires:** Most failures happened on the original or nearly new tires, between about 4,500 and 25,000 miles. That points toward possible manufacturing defects rather than normal wear.\n- **Tread separation and sidewall bubbles:** These came up repeatedly and often precede a blowout.\n- **Severity:** Some drivers controlled the car and stopped safely. One highway-speed blowout ended in a crash.\n\n**Related complaints that aren't true blowouts**\n- A 2021 Tesla Model 3 valve stem broke off and deflated the tire while the car was parked at a gas station.\n- A 2021 Tesla Model 3 had suspension bolts back out until the wheel came off.\n\nI can narrow this by make, model, or year. I can also count how many of these complaints involved a crash.",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "tire blowout while driving",
+          "limit": 10
+        }
+      ],
+      "tool_results": [
+        [
+          {
+            "odi_number": 11470601,
+            "make": "TOYOTA",
+            "model": "CAMRY",
+            "model_year": 2020,
+            "components": "TIRES",
+            "summary": "On 6/22/22 around 6:30 pm, the front passenger tire blew out. The tire in question came with the vehicle upon purchasing new on 5/14/20. There is currently about 13,300 miles on the car. Luckily my oldest son was driving and was able to maneuver into a safe place and put on the donut spare. Car had to be driven by son today with donut spare on and will take pictures of subject tires when he gets back home."
+          },
+          {
+            "odi_number": 11434154,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "TIRES",
+            "summary": "Drivers rear side tire had a blow involving the tread flying off exactly at the seam it is attached to the tire.  This couldn't caused an accident or death to myself or other drivers on the road.  These tires were purchased on the vehicle brand new in Sept 19 2020.  The accident happened September 15 2021.  The vehicle is brand new as well.  The other Goodyear eagle sport tires on the vehicle had bubbles which would lead to another blowout.  The car has under 25k miles.  The car has had oil changes, etc per car doc agreement.  There is something wrong with the integrity of the rubber of the tire or they are retreading and  selling retreaded tires as new.  My son decided with the knowledge of the tire mechanic, to replace all Goodyear tires due to the safety hazard they could create.  He had to replace 3 tires."
+          },
+          {
+            "odi_number": 11457255,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "TIRES",
+            "summary": "Pirelli PZero 235/35/R20 tires on the entire car, was driving when front left tire blew out after 4500 miles, had the car towed back to Tesla dealer and tire replaced. Now after 2 months, rear left tire has bubble on the sidewall after only 5400 miles with no indication of previous damage. I believe this to be a defective tire and an immense safety hazard."
+          },
+          {
+            "odi_number": 11440209,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "TIRES",
+            "summary": "The contact owned a 2020 Honda Civic equipped with Continental tires, Tire line:  Conti Pro Contact, Tire size: 235/40/R18, and DOT number: af2rwd3w. The contact stated while driving at 75 MPH,  the rear passenger side tire blew out suddenly which the vehicle started to drift to the right of the road and go over and crash into a medium near oncoming traffic. The contact was able to place a spare tire on the vehicle for the contact to continue to drive to their residence. The contact took the vehicle to an auto body shop that inspected the vehicle and declared the vehicle a total loss. The contact was concerned that the failure that occurred with the vehicle was a defect on the tire that had blown out. The tires were the original equipment on the vehicle The manufacturer was made aware of the failure. The failure mileage was 11,045."
+          },
+          {
+            "odi_number": 11481947,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "UNKNOWN OR OTHER,FORWARD COLLISION AVOIDANCE",
+            "summary": "Driving in autopilot during daylight hours (8:30am) about 70mph the vehicle suddenly braked long and hard, tires screeched when there was nothing around me or in the road. It could have caused a serious accident if anyone was behind me."
+          },
+          {
+            "odi_number": 11492520,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "WHEELS",
+            "summary": "The TPMS alerted me that the front driver tire was low at 36 psi. Pulled into gas station within a mile from initial alert and when I unscrewed the valve cap the valve stem broke and shot out of the tire and the tire deflated. The components were found and are available for inspection. The car has not been repaired yet and is currently at the Tesla Service Center in Agoura Hills at 28721 Bldg A Canwood Street Agoura Hills, CA. I drive two children under 5 and am lucky this did not occur at high speeds or while the vehicle was in operation at any speed. There is no reason this should have happened. There was no prior damage to the wheel or tire."
+          },
+          {
+            "odi_number": 11342337,
+            "make": "TOYOTA",
+            "model": "CAMRY",
+            "model_year": 2020,
+            "components": "UNKNOWN OR OTHER",
+            "summary": "NEW VEHICLE, PRISTINE CONDITION. HIGHWAY DRIVING, OPEN SPACE, STRAIGHT LINE. NO TREES, CARS, TRUCKS, OVERPASSES, ETC. IN VICINITY. WEATHER OVERCAST, NO RAIN. WITHOUT WARNING, SUNROOF GLASS EXPLODED OUTWARD. GLASS PIECES DID FALL INSIDE, BUT MOSTLY BLEW OUT AND BACK, GOUGING REAR WINDOW AND CAUSING SIGNIFICANT PAINT DAMAGE ON TRUNK. SIZE OF BLOWOUT HOLE APPROXIMATELY 24\"X13\". TOYOTA SAYS NOT THEIR FAULT, CLEARLY A ROCK HIT IT."
+          },
+          {
+            "odi_number": 11298079,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "SERVICE BRAKES",
+            "summary": "THE CRASH MITIGATION ACTIVATED TWICE IN TWO DIFFERENT SITUATIONS ALMOST CAUSING ME TO GET REAR ENDED TWICE.  THE FIRST TIME WAS WHEN I WAS GOING THROUGH A ROUNDABOUT, THE CAR IN FRONT OF ME WAS A NORMAL CAR LENGTH AHEAD AS WE BOTH ENTERED THE CIRCLE.  THE CAR IN FRONT TURNED LEFT AND I WAS GOING STRAIGHT THROUGH.  AT THIS TIME THE CAR WAS OUT OF MY WAY AND IN THE TURN AND SUDDENLY MY CAR SLAMMED ON THE BRAKES ALMOST TO A COMPLETE STOP.  THE CAR BEHIND ME ALSO STOPPED ABRUPTLY AND NEARLY REAR ENDED ME.  MY LEFT HAND WAS RESTING ON THE WHEEL AND THE SUDDEN STOPPAGE MADE MY FINGERS CRUNCH UP INTO THE STEERING WHEEL FEELING LIKE A \"JAMMED\" FINGER.  THE SECOND TIME THE CRASH MITIGATION ACTIVATED WAS AT 0550 IN THE MORNING ON THE WAY TO WORK.  I WAS ENTERING A 4-WAY WITH NO VEHICLES IN FRONT OF ME.  I WAS APPROACHING THE INTERSECTION AT AROUND 25 MPH AND MIDWAY THROUGH THE INTERSECTION THE CAR SLAMMED ON IT'S BRAKES ALMOST TO A CLEAR STOP.  I DOWN SHIFTED AND WHEN IT RELEASED I PRESSED THE GAS AND ABOUT 2 SECONDS LATER IT ACTIVATED AGAIN.  THE VEHICLE BEHIND ME LAID ON HIS HORN IN ANGER THE ENTIRE TIME AS HE ALMOST HIT ME TWICE IN THAT EVENT.  THE 4-WAY I WAS APPROACHING HAD NO VEHICLES GOING THROUGH, HOWEVER THE RIGHT SIDE ENTRY HAD A VEHICLE STOPPED AT THE LIGHT AND THAT PARTICULAR SIDE IS ELEVATED AS IT COMES DOWN A SLIGHT HILL.  BOTH OF THESE EVENTS WERE TERRIFYING AND NOW I AM AFRAID THAT THIS VEHICLE WILL DO IT AGAIN AT ANY TIME WHEN I AM IN AWARE.  I FEEL THIS VEHICLE IN IT'S CURRENT STATE IS UNSAFE AND MY CONFIDENCE IN IT IS VERY LOW.  I DRIVE ABOUT 100 MILES EVERY DAY FOR WORK AND AM NERVOUS ABOUT THE CRASH MITIGATION SYSTEM CAUSING ME TO GET REAR ENDED.  I AM 43 YEARS OLD AND HAVE NEVER BEEN IN AN ACCIDENT AND NOW I'M FEELING IT IS NOT IF, BUT WHEN.  VERY UNSATISFIED WITH THIS PURCHASE NOW AND FEEL OTHERS MUST BE HAVING SAME ISSUES."
+          },
+          {
+            "odi_number": 11499966,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SUSPENSION",
+            "summary": "The wheel control arm bolts that hold the wheel onto the vehicle slowly unscrewed until they fell out (x2 bolts per wheel). It is available for inspection upon request.  If a disconnected fully inflated tire is sucked under the car at high speeds, it may potentially flip the vehicle, badly rupture the battery pack or the wheel may jettison from the vehicle onto surrounding vehicles. It is unknown what kind of damage or after-effect would take place if the battery were severely damaged by an inflated tire and rim.  The problem was observed, documented and repaired by Tesla. The effects of the problem were only observed at 1 MPH. A recall of this specific issue was listed for other Model 3 2021 vehicles, but our vin # was not included in this recall, while it should have been.  Tesla has inspected the vehicle one time and claim the vehicle is now safe to drive. Insurance would not participate in any claims regarding this type of incident because nobody was hurt.  We did not receive any warning prior to failure, not even a wobble, shimmy, clunk or precursor of any kind. The car appeared to be perfectly solid and then suddenly the wheel came off.  The car did not crash into anything other than the ground when the wheel disconnected."
+          },
+          {
+            "odi_number": 11289435,
+            "make": "TOYOTA",
+            "model": "CAMRY",
+            "model_year": 2020,
+            "components": "TIRES",
+            "summary": "2020 TOYOTA CAMRY. CONSUMER WRITES IN REGARDS TO PROBLEMS WITH THEIR TIRES. CONSUMER STATED THAT THE FRONT TIRE CAME APART WHILE DRIVING. *LD    *JS"
+          }
+        ]
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": false,
+      "expected_value": null,
+      "judge_result": {
+        "relevant": false,
+        "grounded": false,
+        "reasoning": "Judge response could not be parsed",
+        "parse_error": true
+      },
+      "overall_pass": false
+    },
+    {
+      "id": "semantic_fsd_braking",
+      "question": "Describe issues people have had with Tesla's self-driving braking",
+      "answer": "## Main issues with Tesla Autopilot and Full Self-Driving braking\n\nThe complaints I pulled were almost all about the 2021 Model 3. They describe the same problem, usually called **\"phantom braking.\"** This is a sample of the most relevant results, not a full count.\n\n### 1. Hard braking for no apparent reason\n- Drivers say the car brakes suddenly and forcefully with no obstacle, car, or hazard ahead.\n- It usually happens at highway speed. Reported drops include 75 mph to 40 mph, 77 mph to a hard stop, and 80 mph down to about 20 mph.\n- Frequency varies by driver. One reported an event every 15\u201320 minutes. Another reported 5 events in a 6-mile trip. Another said it happens daily. One reported 7 automatic emergency braking events in 5 hours, in a car with only 482 miles on it.\n\n### 2. Suspected triggers\n- Large trucks, semis, and RVs, especially oncoming trucks on two-lane roads.\n- Shadows, puddles, tar patches, small hills, off-ramps, and side roads.\n- Curves, and vehicles in adjacent lanes.\n- One owner said it began after a recent software update. This was in Full Self-Driving (FSD) Supervised, on secondary roads.\n\n### 3. Near-collisions and safety risk\n- The most common worry is being rear-ended. Several drivers said they came close, including one nearly hit by a semi and another whose follower swerved toward a ditch to avoid them.\n- Passengers were thrown forward against their seatbelts.\n- Some drivers press the accelerator to cancel the braking, which can push them over the speed limit.\n- Several predicted serious injuries or deaths if it isn't fixed, and some called for a recall.\n\n### 4. It happens outside full FSD\n- Several drivers said it happened on basic Autopilot or traffic-aware cruise control.\n- One driver said it happened without FSD, on a camera-only system.\n- Another said automatic emergency braking fired even with Autopilot turned off.\n\n### 5. Responses from Tesla\n- Owners said service centers found \"no malfunction\" or had no fix.\n- Some were told Tesla knew about the problem and was working on it.\n- One was told to stop using Autopilot.\n- Many said they submitted \"bug reports\" from the car, but the problem continued for months.\n\n### 6. Related erratic behavior\n- One FSD Beta driver reported sudden hard acceleration from 40 mph to over 60 mph.\n- Another driver reported a self-driving Model 3 that alternated between accelerating and braking while merging onto I-95 at low speed. That driver had to brake and swerve onto the shoulder to avoid it.\n\n### Takeaway\nThe complaints are consistent. Drivers describe unpredictable, unexplained, and sometimes severe braking that leaves little time for the cars behind them to react. They say it undermines their trust in the driver-assist features, and many say they stopped using them. These are individual consumer reports. They aren't verified findings, and they don't show how common the problem is across all Teslas.\n\nI",
+      "tools_called": [
+        "semantic_search_complaints",
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "Tesla Autopilot or self-driving phantom braking, sudden unexpected braking",
+          "limit": 10
+        },
+        {
+          "query": "Tesla Full Self-Driving failed to brake or braked incorrectly causing collision",
+          "limit": 10
+        }
+      ],
+      "tool_results": [
+        [
+          {
+            "odi_number": 11450083,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "Phantom braking occurs about once every 15-20 minutes of long distance highway driving while using Tesla Autopilot.  Specifically, for no apparent reason, with no obstacle in front or near the car, while driving highway speed on Autopilot, the car suddenly slams on the brakes on its own."
+          },
+          {
+            "odi_number": 11467568,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "On multiple occasions, my vehicle has experienced the same \u201cphantom braking\u201d problem other Teslas have. This has happened when cruise control (autopilot) was enabled. No cars or obstacles were directly in front of my vehicle and the immediate breaking was unnecessary"
+          },
+          {
+            "odi_number": 11449993,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "The vehicle,  while operating in autopilot mode, will automatically brake aggressively for no apparent reason.  No physical object including shadows or potholes are in the way for this to occur.  I have experienced this phantom braking on multiple occasions while using the driver assist mode on (autopilot).  Being the attentive driver that I am, I quickly disengage the autopilot and manually take over to avoid a rear end collision.   I have not had the vehicle inspected by Tesla or my insurance company as this is apparently a common theme with this car."
+          },
+          {
+            "odi_number": 11450389,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "Car continues to have instances of phantom braking, no acknowledgment from Tesla regarding the issue. Occurs randomly and unpredictably, causing a serious safety hazard for cars following behind on the road."
+          },
+          {
+            "odi_number": 11452591,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "On several occasions since June 2021, my Tesla Model 3 has suddenly braked hard on its own while the Autopilot cruise control function was engaged (phantom braking).  There has been no apparent reason for the sudden braking incidents, and they have happened at highway speeds. When I reported these incidents to my Tesla dealer, I was told that Tesla was aware of this problem with Tesla Model 3 vehicles, and that Tesla was working on finding a solution.  Yet the problem has continued, and occurred again as recently as yesterday"
+          },
+          {
+            "odi_number": 11451595,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,UNKNOWN OR OTHER,FORWARD COLLISION AVOIDANCE",
+            "summary": "Phantom braking.  The Tesla brakes without warning or provocation when on cruise control.  On two lane roads brakes deploy forcefully every time a semi truck is traveling in the on coming lane.  It does not have to be on a curve.  It is every time a large truck is in the opposing lane.  On 4 lane divided highways, it will forcefully brake (from 75 mph down to 40 mph in seconds) climbing small hills, patches of tar on the roads, shadows, off ramps, side roads and for no apparent reason.   I have almost been rear ended when a car is following closely and it happens.  I have recorded these incidents , reported to Tesla, taken the vehicle for diagnostics and they have no answer and imply that occasionally it may happen however, it should not be an issue.  IT IS A DANGEROUS PROBLEM and an accident waiting to cause serious injury.  I drive daily with my job and it happens every day."
+          },
+          {
+            "odi_number": 11449801,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "Since purchasing my Tesla new in 6/21, I've been experiencing random and dangerous \"Phantom Braking\" where the vehicle will suddenly brake hard on the highway for no reason. On a few occasions, this created a hazard for motorists behind me. This has been occurring in rural and urban settings with the vehicle's cruise control or AutoPilot set. It doesn't matter which system I use, phantom braking is persistent in both. I contacted Tesla service twice on this issue and each time I was informed \"no malfunction found with sensors or vehicle operation.\" I was hopeful that Tesla would release a software update to mitigate this issue (other Tesla owners have voiced this issue on social media and forums), however nothing has been resolved in the 7 months I've owned this vehicle."
+          },
+          {
+            "odi_number": 11457385,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "Phantom braking occurs often when using traffic aware cruise control.  I have not been able to determine a pattern, as the malfunction is not consistent.  It can occur on a 2-lane road (with lines) as well as on a 6-line divided highway.  I can tell the difference between phantom braking and the vehicle adjusting speed for an upcoming curve, as normal adjustment occurs in the same spot each time.  Phantom braking is unpredictable, and may not occur in a location that it previously had.  There are days it never happens, or sometimes once a day,  or has occurred 5 times in an approx 6 mile trip.  During a phantom braking event, the car unexpectedly applies the brakes hard.  I react by pressing the accelerator, which usually results in a speed greater than the speed limit.  I use the bug report feature each time it occurs, so Tesla would be able to view each event.  As I'm sure you can tell from the VIN, this is a camera-only Tesla system.  I do not have full self driving."
+          },
+          {
+            "odi_number": 11512552,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "Car put on brakes unexpectedly during use of adaptive cruise control (autopilot).  This phantom braking happens often at highway speed.  Bug reports have been sent from vehicle to Tesla"
+          },
+          {
+            "odi_number": 11582795,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "This car, like many Teslas, is experiencing what has been come to be known as phantom braking. When in the autopilot or full self driving, this car will occasionally to frequently, depending on the day, suddenly break where it will decelerate from say 65 mph to 45 or 50 in a very short period of time. This can happen in very busy traffic conditions. It seems to happen when I'm going faster rather than slower. For example, I haven't experienced it so much on City Street. It seems much more prominent on highways. This is an issue that has many YouTube videos about. It has been reported by many Tesla owners as well as the media."
+          }
+        ],
+        [
+          {
+            "odi_number": 11576482,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "While driving [XXX] on [XXX]  in Texas, the Tesla autopilot abruptly and forcibly applied the brakes while I was driving approximately 77 mph.  I was almost rear ended by a semi truck due to this issue.     This happened again about 20 miles down the road and I  disengaged the cruise control and autopilot altogether at that point.  This is a continuous problem that needs to be addressed. INFORMATION REDACTED PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)"
+          },
+          {
+            "odi_number": 11450420,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "I've complained to Tesla as well. No known fix at this time. When Autopilot is engaged, it will pick up phantom objects and brake hard to avoid. I notice this happens mostly when passing semis, RVs, trailers. I see this happening on any turn where a vehicle is in the lane next to you or on the other side of the road.   The latest one I had autopilot engaged, I was alone on the highway, and it braked hard for no reason. Brought me from 75-80 mph down to 20 mph in an instant. It then accelerated hard up to 80 again. Within a couple of seconds, it braked hard again down to 20 mph.  Autopilot doesn't work. Tesla had no fix and their recommendation was to not use it anymore. I bought the Tesla for that reason. Full Self Driving is even worse. I'm afraid to use it because I have a delayed reaction in Full Self Driving mode. It is unsafe and it will cause an accident."
+          },
+          {
+            "odi_number": 11483204,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "While using my Tesla's Full Self Driving (FSD) feature (Navigate on Autopilot) on a recent road trip through West Texas, the vehicle, on multiple occasions, would automatically brake while cruising at speeds of 80 mph (speed limit was 75 mph), which consequently dropped the vehicle's speed over 20 mph within seconds. The result was being forcibly slammed forward with such a jarring, unexpected force that would have easily slammed me as the driver and my front seat passenger into the wind shield if we were not wearing our seatbelts. This happened multiple times on the trip. The only way to recover was to depress the accelerator and forcefully hold on to the steering wheel until the braking system released and control was returned to the driver. If this had occurred on a crowded highway rather than on the open spaces of the West Texas interstate system, I am convinced there would have been a rear impact collision. This \"phantom breaking\" as Tesla claims, is a serious issue that will no doubt lead to fatalities if not corrected.  This issue manifested without warning and with no alerting. The issue can be easily reproduced and the component has yet to be inspected by any 3rd party.  I fear people will die because of this issue until it is resolved.  Thanks, Sean Merino"
+          },
+          {
+            "odi_number": 11634962,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "UNKNOWN OR OTHER,FORWARD COLLISION AVOIDANCE",
+            "summary": "My Tesla has full self driving supervised. When I use this feature, since about three updates ago, my Car has started braking for no reason. It hasn\u2019t happened on a freeway, but, but on secondary roads, it will brake and try to come to a stop. It seems to do this, when there is a shadow across the road, or when there is a puddle in or near the road. Sometimes it will brake for no reason at all.  I I have come close to being hit from behind. I think this is a dangerous situation that needs to be looked into."
+          },
+          {
+            "odi_number": 11621879,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE,LANE DEPARTURE",
+            "summary": "My Tesla was operating in Full-Self-Driving Beta when it experienced a sudden uncontrolled accelration event. I was driving on [XXX]  at approximatley [XXX] this morning. The road speed limit was 40 mph. The car display was correctly showing that the road speed limit was 40mph. The speed offset in the cars setting was limited to 5 mph max above the speed limit. While the car was driving it suddenly accelerated very hard from approximately 40 mph to over 60mph before I was able to stab the brake pedal and kick the car out of full self driving mode.  There were no errors, warnings, or signs that anything was wrong with the car. I have also notified Tesla via the service request function in the Tesla App under the section for \"software performance\". INFORMATION REDACTED PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)"
+          },
+          {
+            "odi_number": 11441777,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "My new Tesla 3 deployed automatic emergency braking seven (7) times in a 5 hour period.  The Tesla Autopilot was turned off due to reports of phantom braking like this from many other drivers in a Tesla online forum.  Regardless, the car slammed on the brakes when there were no obstructions or cars in front of me.  I almost suffered a rear end collision during one of these phantom emergency braking events, where the car suddenly braked from 70MPH to less than 40MPH.  The malfunctioning component is likely the Tesla software that works with the forward-facing cameras which are installed as part of the Full Self Driving feature.  While I did not pay the $10,000 for FSD, this system still operates for automated braking and lane departure.  I have requested Tesla inspect the car, which has 482 miles on it, but am filing with you anyway due to the similarity between this experience today and the dozens of other complaints I have read about on the Tesla Owners forum called TOO."
+          },
+          {
+            "odi_number": 11440581,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "I was using auto pilot. The road was pretty empty single lane road. There was no car in front of me or coming in opposite direction. The car automatically slammed the brake pretty hard. We were lucky enough no one rear ended us. Looks like a software bug in Tesla. Please investigate. I will never ever again use this [XXX] auto pilot and risk my family life.  INFORMATION Redacted PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)."
+          },
+          {
+            "odi_number": 11472737,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "STEERING,ELECTRICAL SYSTEM,SERVICE BRAKES",
+            "summary": "This \"self driving\" Model 3, with FL License Plate [XXX], attempted to merge onto I95 south from an on-ramp, and very nearly caused a major accident.  The vehicle had a bumper sticker on the back that said something like \"please be patient, I am a self driving vehicle.\"  The vehicle was merging from a left side on-ramp, at a VERY LOW SPEED, and crossed two lanes of interstate traffic, very erratically accelerating, then braking, then accelerating again, and then braking.  My vehicle was directly in its path, and I had to brake hard, and take to the shoulder to avoid the collision.  If this vehicle's trips are logged, it needs to be investigated. If it weren't for the humans paying attention, the actions of the Tesla car/driver would have caused a major accident, and most likely bodily injury or death.    INFORMATION Redacted PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)."
+          },
+          {
+            "odi_number": 11452591,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "On several occasions since June 2021, my Tesla Model 3 has suddenly braked hard on its own while the Autopilot cruise control function was engaged (phantom braking).  There has been no apparent reason for the sudden braking incidents, and they have happened at highway speeds. When I reported these incidents to my Tesla dealer, I was told that Tesla was aware of this problem with Tesla Model 3 vehicles, and that Tesla was working on finding a solution.  Yet the problem has continued, and occurred again as recently as yesterday"
+          },
+          {
+            "odi_number": 11448117,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "ELECTRICAL SYSTEM,VEHICLE SPEED CONTROL,SERVICE BRAKES",
+            "summary": "I was driving north on Wisconsin route 14 at about 60 mph in my Tesla model 3 using the cruise control..  When a large transportation truck came from the opposite direction, my Tesla suddenly braked sharply.  A Ford model F150 truck was following behind me and almost crashed into the back of my car.  Fortunately the driver was alert and by sharply apply his brakes on driving into the ditch he avoided colliding with me.  This could have been (and nearly was) a lethal accident.  I would urge that you put a recall on a Tesla vehicles until this problem is corrected.  I have contacted other Tesla owners and they have experienced similar problems. I contacted my local Tesla service station and they seemed unconcerned about the problem.  I urge you to issue a recall before someone is seriously hurt or killed."
+          }
+        ]
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": false,
+      "expected_value": null,
+      "judge_result": {
+        "relevant": false,
+        "grounded": false,
+        "reasoning": "Judge response could not be parsed",
+        "parse_error": true
+      },
+      "overall_pass": false
+    },
+    {
+      "id": "semantic_wheels_falling_off",
+      "question": "Tell me about problems people had with their wheels falling off",
+      "answer": "Only a few of the results were actually about wheels coming off. Most of the rest were steering or brake complaints that the search matched loosely. The relevant ones fall into two groups:\n\n**Tesla Model 3 (2021): suspension bolts loosening**\n- In one complaint, the lateral link bolts came unfastened. The link shifted out of place and damaged several suspension components. The wheel separated from the car, and the car could no longer be driven.\n- In another, the control arm bolts holding the wheel on (two per wheel) slowly unscrewed until they fell out.\n  - The owner got no warning at all: no wobble, shimmy, or clunk. The wheel suddenly came off.\n  - The owner says a recall covered other 2021 Model 3s but not their VIN, even though it should have.\n  - Tesla inspected and repaired the car. The owner worries a detached inflated tire could be pulled under the car at speed. They think it could flip the car, rupture the battery pack, or send the wheel into other traffic.\n  - Nobody was hurt, and insurance would not cover it.\n\n**Honda Civic (2020): broken wheel studs**\n- On the passenger side, 4 of the 5 lug bolts snapped off while driving. The lug nuts stayed on the broken bolts rather than coming loose.\n- The wheel separated from the car, which caused an accident and about $5,500 in damage.\n- The car's information center gave no warning.\n\n**Common themes**\n- **No warning.** Both owners say the failure came with no symptoms beforehand.\n- **Different causes.** In the Teslas, fasteners backed out of the suspension. In the Honda, the studs themselves broke.\n- **Real danger.** A wheel coming off at speed can cause a crash and leave the car undrivable. It could also hit other vehicles.\n\nThis is a small sample from a semantic search, so it doesn't show how common the problem is. I can search a specific make, model, or year, or count crash-related complaints, if you'd like to go further. If you own one of these vehicles, check NHTSA's recall lookup using your VIN.",
+      "tools_called": [
+        "semantic_search_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "wheel fell off while driving",
+          "limit": 10
+        }
+      ],
+      "tool_results": [
+        [
+          {
+            "odi_number": 11455724,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "WHEELS",
+            "summary": "The tire fell off the car while driving. The lateral link bolts have come unfastened and cause the link to come out of place and consequently damage several suspension components. As the bolts unfastened, the wheel was separated from the car and fell off, causing the car to be undrivable."
+          },
+          {
+            "odi_number": 11638539,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "ELECTRICAL SYSTEM",
+            "summary": "The car cuts off while driving"
+          },
+          {
+            "odi_number": 11748079,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "WHEELS",
+            "summary": "On passenger side, 4 of 5 wheel hub bolts (lug bolts) broke off during driving. The lug nuts did not come loose.  The bolts actually broke off with lug nuts attached.  This caused the wheel to separate from the car while driving.  This caused an accident and $5,500 damage to the car.  There were no warnings from the in-car information center."
+          },
+          {
+            "odi_number": 11499966,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SUSPENSION",
+            "summary": "The wheel control arm bolts that hold the wheel onto the vehicle slowly unscrewed until they fell out (x2 bolts per wheel). It is available for inspection upon request.  If a disconnected fully inflated tire is sucked under the car at high speeds, it may potentially flip the vehicle, badly rupture the battery pack or the wheel may jettison from the vehicle onto surrounding vehicles. It is unknown what kind of damage or after-effect would take place if the battery were severely damaged by an inflated tire and rim.  The problem was observed, documented and repaired by Tesla. The effects of the problem were only observed at 1 MPH. A recall of this specific issue was listed for other Model 3 2021 vehicles, but our vin # was not included in this recall, while it should have been.  Tesla has inspected the vehicle one time and claim the vehicle is now safe to drive. Insurance would not participate in any claims regarding this type of incident because nobody was hurt.  We did not receive any warning prior to failure, not even a wobble, shimmy, clunk or precursor of any kind. The car appeared to be perfectly solid and then suddenly the wheel came off.  The car did not crash into anything other than the ground when the wheel disconnected."
+          },
+          {
+            "odi_number": 11352742,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "STEERING,ELECTRICAL SYSTEM",
+            "summary": "WE WERE TRAVELING EAST ON HWY 63 GOING HOME.  THE LANE DEPARTURE ASSIST CAME ON BUT WE WERE NOT OUT OF LANE.  WE KEPT TRAVELING A LITTLE FURTHER AND THE STEERING WAS STIFF.  WE WERE TRAVELING ABOUT 53 MPH AND THE CAR ALL OF A SUDDEN JERKED VERY SHARP TO THE RIGHT AND WE WENT OFF THE ROAD HITTING PARKED TRUCK AND FLIPPED IT.  THE WHEELS JUST TURNED THE RIGHT AND WOULD NOT LET US TURN THE WHEEL"
+          },
+          {
+            "odi_number": 11683322,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "STEERING,WHEELS",
+            "summary": "While driving a Tesla 2021 model 3 tonight at 8:45 P.M. turning left the wheels locked to the left and would not turn straight causing me to hit a concrete divider. After hitting concrete divider steering released to normal driving but driver side car front rim tire was damaged and wheel alignment misdirected."
+          },
+          {
+            "odi_number": 11695420,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "I drove into my neighbor\u2019s driveway to drop her off. As I slowed down and applied the brakes to stop, the car failed to respond. It continued forward, running over the flower and plant pots at the edge of the driveway, crossing the backyard, and finally colliding with the trees and bushes at the rear of the property. All airbags deployed, and the vehicle was damaged beyond repair."
+          },
+          {
+            "odi_number": 11705138,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "STEERING,SUSPENSION,UNKNOWN OR OTHER",
+            "summary": "I was driving to work in the rain on the highway and I heard a big thump and I thought I had hit something and my wheel went sideways and I kept trying to keep my car on the road even though I didn\u2019t hit anything."
+          },
+          {
+            "odi_number": 11688283,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "STEERING",
+            "summary": "Steering wheel is peeling/degrading and  causing difficulties with steering and control."
+          },
+          {
+            "odi_number": 11659891,
+            "make": "HONDA",
+            "model": "CIVIC",
+            "model_year": 2020,
+            "components": "STEERING",
+            "summary": "While driving vehicle down the road the steering wheel sticks for a second or two then releases. This caused the car to veer off course until corrected. This has happened on a regular basis. I took it to dealership but they stated there were no recalls for the vehicle"
+          }
+        ]
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": false,
+      "expected_value": null,
+      "judge_result": {
+        "relevant": false,
+        "grounded": false,
+        "reasoning": "Judge response could not be parsed",
+        "parse_error": true
+      },
+      "overall_pass": false
+    },
+    {
+      "id": "out_of_scope_question",
+      "question": "What's the capital of France?",
+      "answer": "The capital of France is Paris.\n\nThis question doesn't involve vehicle safety complaints, so I didn't need to query the NHTSA database. If you'd like to know about complaint counts for a certain make, model, or year, or about specific symptoms like steering failures or sudden loss of power, I can look those up.",
+      "tools_called": [],
+      "tool_inputs": [],
+      "tool_results": [],
+      "expected_tools": [],
+      "tool_selection_correct": true,
+      "check_type": "no_tool",
+      "content_check_passed": true,
+      "expected_value": null,
+      "judge_result": null,
+      "overall_pass": true
+    },
+    {
+      "id": "parallel_brake_and_tire",
+      "question": "Are there complaints about both brake issues and tire issues for Tesla?",
+      "answer": "Yes. The database has Tesla complaints about brakes and Tesla complaints about tires. They are separate complaints, though. In the samples I pulled, none described a single complaint covering both problems. The database has 665 Tesla complaints in total.\n\n**Brake complaints**\n- The brake complaints I saw were almost all about \"phantom braking.\" That means the car brakes hard on its own, with no obstacle, while Autopilot, Full Self-Driving (FSD) or adaptive cruise control is on.\n- It often happens at highway speeds. Several owners said they nearly got rear-ended.\n- Some owners said Tesla service found \"no malfunction.\"\n- All of the ones I saw were 2021 Model 3s.\n\n**Tire and wheel complaints**\n- One owner reported two tires on the same side failing at once after 7.7 miles in a loaner car.\n- Another reported a Pirelli tire blowout at 4,500 miles, followed by a sidewall bubble on another tire.\n- One reported a valve stem that broke and shot out, deflating the tire.\n- One reported a tire-fitment and installation problem at a third-party shop (wrong load rating and underinflation).\n- A related wheel complaint described control-arm bolts working loose until the wheel came off.\n- These were also 2021 Model 3s.\n\n**Caveats**\n- I only looked at the top 5 results for each topic, so this isn't a full count. Many more complaints probably exist.\n- I can't count complaints by topic with the structured tool. It only filters by make, model, year, fire and crash.\n- To see whether any single complaint mentions both brakes and tires, I could run a search on that combined theme. I could also narrow the search to a specific model or year.",
+      "tools_called": [
+        "semantic_search_complaints",
+        "semantic_search_complaints",
+        "count_complaints"
+      ],
+      "tool_inputs": [
+        {
+          "query": "Tesla brake problems, brakes failing or not working",
+          "limit": 5
+        },
+        {
+          "query": "Tesla tire problems, tire blowout, premature tire wear or tire failure",
+          "limit": 5
+        },
+        {
+          "make": "Tesla"
+        }
+      ],
+      "tool_results": [
+        [
+          {
+            "odi_number": 11452510,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "FORWARD COLLISION AVOIDANCE",
+            "summary": "My Tesla in auto pilot brakes randomly while on the highway or in a lanes roadway. I almost got rear ended last week."
+          },
+          {
+            "odi_number": 11634962,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "UNKNOWN OR OTHER,FORWARD COLLISION AVOIDANCE",
+            "summary": "My Tesla has full self driving supervised. When I use this feature, since about three updates ago, my Car has started braking for no reason. It hasn\u2019t happened on a freeway, but, but on secondary roads, it will brake and try to come to a stop. It seems to do this, when there is a shadow across the road, or when there is a puddle in or near the road. Sometimes it will brake for no reason at all.  I I have come close to being hit from behind. I think this is a dangerous situation that needs to be looked into."
+          },
+          {
+            "odi_number": 11439075,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "I noticed you have a recall for SOME Teslas about a glitch with the auto braking after latest Beta FSD rollout.  My Tesla has had this since day one, and I don't have or use FSD.  I do use the adaptive cruise control, and that is when I have problems with my car slamming on the brakes for no reason.  I have been lucky, 3 times I have ALMOST, been rear-ended.  I have had it in the shop a couple times for the issue, and they tell me to read the manual and the car is fine.  I have talked with 5 other Tesla owners, and they have all had the problem of their car slamming on the brakes for no REAL reason.  I think the GLITCH is a bigger problem than Tesla is willing to admit, and applies to most Tesla cars.  there are even website forums about, \"Phantom Braking\", which is lingo for the same thing"
+          },
+          {
+            "odi_number": 11452591,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,SERVICE BRAKES,FORWARD COLLISION AVOIDANCE",
+            "summary": "On several occasions since June 2021, my Tesla Model 3 has suddenly braked hard on its own while the Autopilot cruise control function was engaged (phantom braking).  There has been no apparent reason for the sudden braking incidents, and they have happened at highway speeds. When I reported these incidents to my Tesla dealer, I was told that Tesla was aware of this problem with Tesla Model 3 vehicles, and that Tesla was working on finding a solution.  Yet the problem has continued, and occurred again as recently as yesterday"
+          },
+          {
+            "odi_number": 11449801,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "VEHICLE SPEED CONTROL,FORWARD COLLISION AVOIDANCE",
+            "summary": "Since purchasing my Tesla new in 6/21, I've been experiencing random and dangerous \"Phantom Braking\" where the vehicle will suddenly brake hard on the highway for no reason. On a few occasions, this created a hazard for motorists behind me. This has been occurring in rural and urban settings with the vehicle's cruise control or AutoPilot set. It doesn't matter which system I use, phantom braking is persistent in both. I contacted Tesla service twice on this issue and each time I was informed \"no malfunction found with sensors or vehicle operation.\" I was hopeful that Tesla would release a software update to mitigate this issue (other Tesla owners have voiced this issue on social media and forums), however nothing has been resolved in the 7 months I've owned this vehicle."
+          }
+        ],
+        [
+          {
+            "odi_number": 11679841,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "TIRES",
+            "summary": "On [XXX], I was given a Tesla Model 3 loaner vehicle (VIN: [XXX] ) from the Knoxville, TN Tesla Service Center while my own Tesla was in for warranty repair. At pickup, I told the service advisor that the passenger-side tires looked unsafe. No inspection or warning was provided.  After driving only 7.7 miles at normal speed on smooth roads, both passenger-side tires failed simultaneously. There were no potholes, curbs, or debris impacts. Tesla\u2019s own service invoice states the cause was \u201cnot specified\u201d and only speculates possible curb or debris damage without proof.  Two tires failing on the same side so soon after hand-off suggests a pre-existing structural defect or safety issue. This incident posed a serious safety risk to myself and other motorists and could have caused loss of control at highway speeds. INFORMATION REDACTED PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)"
+          },
+          {
+            "odi_number": 11457255,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "TIRES",
+            "summary": "Pirelli PZero 235/35/R20 tires on the entire car, was driving when front left tire blew out after 4500 miles, had the car towed back to Tesla dealer and tire replaced. Now after 2 months, rear left tire has bubble on the sidewall after only 5400 miles with no indication of previous damage. I believe this to be a defective tire and an immense safety hazard."
+          },
+          {
+            "odi_number": 11499966,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "SUSPENSION",
+            "summary": "The wheel control arm bolts that hold the wheel onto the vehicle slowly unscrewed until they fell out (x2 bolts per wheel). It is available for inspection upon request.  If a disconnected fully inflated tire is sucked under the car at high speeds, it may potentially flip the vehicle, badly rupture the battery pack or the wheel may jettison from the vehicle onto surrounding vehicles. It is unknown what kind of damage or after-effect would take place if the battery were severely damaged by an inflated tire and rim.  The problem was observed, documented and repaired by Tesla. The effects of the problem were only observed at 1 MPH. A recall of this specific issue was listed for other Model 3 2021 vehicles, but our vin # was not included in this recall, while it should have been.  Tesla has inspected the vehicle one time and claim the vehicle is now safe to drive. Insurance would not participate in any claims regarding this type of incident because nobody was hurt.  We did not receive any warning prior to failure, not even a wobble, shimmy, clunk or precursor of any kind. The car appeared to be perfectly solid and then suddenly the wheel came off.  The car did not crash into anything other than the ground when the wheel disconnected."
+          },
+          {
+            "odi_number": 11768227,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "TIRES",
+            "summary": "On [XXX], the Walmart Auto Care Center on Thomasville Rd in Tallahassee, FL installed four Goodyear Reliant All-Season tires, size 235/45R18 94V (standard load), on my 2021 Tesla Model 3 Standard Range Plus (approximately 75,000 miles). The vehicle's door placard specifies 235/45R18 at 42 PSI cold, and the original-equipment specification for this vehicle is 235/45R18 98 XL (extra load). The installed tires carry a lower load index (94 = 1,477 lbs per tire) than the vehicle requires (98 = 1,653 lbs per tire).  The tires were delivered underinflated at approximately 35-37 PSI instead of the placard-required 42 PSI cold. After I inflated them to 42 PSI, the right-rear tire initially would not hold pressure and dropped to approximately 31 PSI, indicating a bead-seating or valve defect from installation; it later accepted 42 PSI but requires monitoring.  My normal commute involves sustained highway driving at 70+ mph. Operating at highway speeds on tires rated below the vehicle manufacturer's specified load index, combined with underinflation and a suspected bead/valve installation defect causing pressure loss, creates a risk of heat buildup, tread separation, or sudden blowout and loss of vehicle control.  Walmart did not correct the installation: staff attempted to install only three of the four correct replacement tires and later told me to purchase an additional tire at my own expense. I declined both. No crash, fire, injury, or police report resulted. The tires remain on the vehicle pending resolution. This complaint documents the safety hazard created by the incorrect tire fitment and defective installation.  INFORMATION REDACTED PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)"
+          },
+          {
+            "odi_number": 11492520,
+            "make": "TESLA",
+            "model": "MODEL 3",
+            "model_year": 2021,
+            "components": "WHEELS",
+            "summary": "The TPMS alerted me that the front driver tire was low at 36 psi. Pulled into gas station within a mile from initial alert and when I unscrewed the valve cap the valve stem broke and shot out of the tire and the tire deflated. The components were found and are available for inspection. The car has not been repaired yet and is currently at the Tesla Service Center in Agoura Hills at 28721 Bldg A Canwood Street Agoura Hills, CA. I drive two children under 5 and am lucky this did not occur at high speeds or while the vehicle was in operation at any speed. There is no reason this should have happened. There was no prior damage to the wheel or tire."
+          }
+        ],
+        665
+      ],
+      "expected_tools": [
+        "semantic_search_complaints"
+      ],
+      "tool_selection_correct": true,
+      "check_type": "llm_judge",
+      "content_check_passed": false,
+      "expected_value": null,
+      "judge_result": {
+        "relevant": false,
+        "grounded": false,
+        "reasoning": "Judge response could not be parsed",
+        "parse_error": true
+      },
+      "overall_pass": false
+    }
+  ]
+}
