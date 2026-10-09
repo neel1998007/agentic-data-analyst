@@ -25,6 +25,7 @@ import json
 
 import anthropic
 from dotenv import load_dotenv
+from langfuse import observe, get_client
 
 from src.agents.tools import count_complaints, semantic_search_complaints
 
@@ -219,6 +220,7 @@ def _execute_tool(tool_name: str, tool_input: dict) -> str:
 
 # ── 6. Main agent function ────────────────────────────────────────────────────
 
+@observe()
 def ask_agent(user_question: str) -> str:
     """
     Send a natural-language question to Claude and return its answer.
@@ -265,6 +267,16 @@ def ask_agent(user_question: str) -> str:
         messages=messages,
     )
 
+    # Record input on the root @observe() span so the Langfuse dashboard
+    # shows the full question + system prompt at the top level of the trace.
+    # v4 API: get_client().update_current_span() — NOT langfuse_context (removed in v3+).
+    get_client().update_current_span(
+        input={
+            "question": user_question,
+            "system_prompt": SYSTEM_PROMPT,
+        }
+    )
+
     print(f"[agent] Claude stop reason: {first_response.stop_reason!r}")
 
     # ── Step B: Did Claude request a tool? ────────────────────────────────
@@ -280,61 +292,93 @@ def ask_agent(user_question: str) -> str:
             if block.type == "text"
         )
         print("[agent] Claude answered directly (no tool call).")
+        # Record Claude's direct answer as the output of the root span.
+        get_client().update_current_span(output={"answer": direct_text})
+        # Flush ensures the trace is sent before the process exits.
+        get_client().flush()
         return direct_text
 
-    # ── Step C: Find the tool_use block ──────────────────────────────────
-    # Claude's response content is a list of blocks.  We need the one
-    # with type == "tool_use" to learn which tool it wants and with what args.
+    # ── Step C: Collect ALL tool_use blocks ──────────────────────────────
+    # Claude may request multiple tools in parallel in a single turn.
+    # The old code used next(...) which grabbed only the FIRST block and
+    # silently dropped the rest — causing the API to reject the follow-up
+    # message because it referenced tool_use_ids that had no matching
+    # tool_result.  We now collect every tool_use block.
 
-    tool_use_block = next(
+    tool_use_blocks = [
         block for block in first_response.content if block.type == "tool_use"
-    )
+    ]
+    print(f"[agent] Claude requested {len(tool_use_blocks)} tool call(s).")
 
-    tool_name  = tool_use_block.name    # e.g. "count_complaints"
-    tool_input = tool_use_block.input   # e.g. {"make": "Tesla", "fire": True}
-    tool_use_id = tool_use_block.id     # unique ID we must echo back to Claude
+    # ── Step D: Execute EVERY tool, collecting all results ────────────────
+    # Each tool is run independently.  A try/except around each call means
+    # one failing tool doesn't abort the others — the error becomes the
+    # tool_result content so Claude can still reason about partial data.
 
-    print(f"[agent] Claude wants to call: {tool_name}({tool_input})")
+    tool_results = []
+    for tb in tool_use_blocks:
+        print(f"[agent] Calling: {tb.name}({tb.input})")
+        try:
+            result_str = _execute_tool(tb.name, tb.input)
+        except Exception as exc:
+            result_str = json.dumps({"error": str(exc)})
+            print(f"[agent] WARNING tool '{tb.name}' raised: {exc}")
+        else:
+            print(f"[agent] '{tb.name}' returned: {result_str}")
 
-    # ── Step D: Execute the real tool ────────────────────────────────────
-    # WE run the Python function — Claude never touches the database.
-    # The result is serialised to a JSON string.
+        tool_results.append({
+            "type": "tool_result",
+            "tool_use_id": tb.id,   # must match the id in the assistant turn
+            "content": result_str,
+        })
 
-    tool_result_str = _execute_tool(tool_name, tool_input)
-    print(f"[agent] Tool returned: {tool_result_str}")
-
-    # ── Step E: Second API call with the tool result ──────────────────────
-    # The Anthropic API requires a very specific message structure here:
+    # ── Step E: Build the message history for the second API call ─────────
+    # The Anthropic API requires this exact 3-turn structure:
     #
-    #   messages = [
-    #     { role: "user",      content: <original question>        },
-    #     { role: "assistant", content: <Claude's tool_use blocks> },  ← replay
-    #     { role: "user",      content: <tool_result block>        },  ← our result
-    #   ]
-    #
-    # We replay Claude's full first response as the assistant turn so the
-    # model has the context of what it asked for.
+    #   Turn 1: user       → original question (str)
+    #   Turn 2: assistant  → Claude's first response, serialised as plain
+    #                        dicts via model_dump() so the API accepts it.
+    #                        Must include ALL tool_use blocks exactly as
+    #                        Claude emitted them.
+    #   Turn 3: user       → ALL tool_result dicts in ONE message.
+    #                        Splitting results across multiple messages is
+    #                        an API error — every result for a given
+    #                        assistant turn must arrive together.
 
     messages = [
-        # Original user question
+        # Turn 1 — original question
         {"role": "user", "content": user_question},
 
-        # Claude's first response (replayed verbatim — includes tool_use block)
-        {"role": "assistant", "content": first_response.content},
-
-        # Our tool result, tagged with the same tool_use_id so Claude knows
-        # which tool call this result belongs to.
+        # Turn 2 — Claude's full first response as plain dicts.
+        # model_dump() converts each Pydantic content block to a dict the
+        # API serialiser can handle cleanly (no __dict__ guesswork needed).
         {
-            "role": "user",
-            "content": [
-                {
-                    "type": "tool_result",
-                    "tool_use_id": tool_use_id,
-                    "content": tool_result_str,
-                }
-            ],
+            "role": "assistant",
+            "content": [block.model_dump() for block in first_response.content],
         },
+
+        # Turn 3 — ALL tool results in ONE user message.
+        {"role": "user", "content": tool_results},
     ]
+
+    # ── Debug: inspect exactly what's being sent ──────────────────────────
+    print("\n[debug] Turn 1 — user (original question):")
+    print(f"  type : {type(messages[0]['content']).__name__}")
+    print(f"  value: {messages[0]['content']!r}")
+
+    print("\n[debug] Turn 2 — assistant (model_dump'd content blocks):")
+    print(f"  type : {type(messages[1]['content']).__name__}")
+    for i, block_dict in enumerate(messages[1]["content"]):
+        print(f"  block[{i}] type={block_dict.get('type', '?')} | "
+              f"{json.dumps(block_dict, default=str)}")
+
+    print("\n[debug] Turn 3 — user (all tool_results):")
+    print(f"  count: {len(tool_results)} result(s)")
+    print(f"  value: {json.dumps(messages[2]['content'], indent=2, default=str)}")
+
+    print("\n[debug] Full messages payload sent to second API call:")
+    print(json.dumps(messages, indent=2, default=str))
+    print("[debug] ── end of payload ──\n")
 
     second_response = client.messages.create(
         model=MODEL,
@@ -354,13 +398,42 @@ def ask_agent(user_question: str) -> str:
     )
 
     print("[agent] Claude produced final answer.")
+    # Record the tool-assisted final answer as the output of the root span.
+    get_client().update_current_span(output={"answer": final_text})
+    get_client().flush()
     return final_text
 
 
-# ── 7. Smoke-test ─────────────────────────────────────────────────────────────
+# ── 7. CLI entry-point ───────────────────────────────────────────────────────
+#
+# Usage:
+#   python -m src.agents.claude_agent "How many complaints involved a crash for the Honda Civic?"
+#
+# If no question is supplied, a default test question is used so the
+# script still works as a quick smoke-test with no arguments.
 
 if __name__ == "__main__":
-    question = "car's tire got puncture while driving"
+    import argparse
+
+    DEFAULT_QUESTION = "car's tire got puncture while driving"
+
+    parser = argparse.ArgumentParser(
+        description="Ask the NHTSA complaints agent a natural-language question.",
+    )
+    parser.add_argument(
+        "question",
+        nargs="?",           # 0 or 1 positional args — makes it optional
+        default=None,
+        help="The question to ask the agent. Wrap in quotes if it contains spaces.",
+    )
+    args = parser.parse_args()
+
+    if args.question:
+        question = args.question
+    else:
+        print("No question provided, using default test question.")
+        question = DEFAULT_QUESTION
+
     print("=" * 60)
     print(f"Question: {question}")
     print("=" * 60)

@@ -7,3 +7,4 @@ sqlalchemy
 requests
 sentence-transformers
 pgvector
+langfuse

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from langfuse import observe
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
@@ -75,6 +76,7 @@ def _get_session() -> Session:
 
 # ── Public tool functions ─────────────────────────────────────────────────────
 
+@observe()
 def count_complaints(
     make: Optional[str] = None,
     model: Optional[str] = None,
@@ -207,6 +209,7 @@ def get_sample_complaints(
         session.close()
 
 
+@observe()
 def semantic_search_complaints(query: str, limit: int = 5) -> list[dict]:
     """
     Find complaints whose summary text is semantically similar to ``query``.
