@@ -291,11 +291,23 @@ def ask_agent(user_question: str) -> str:
 
     if first_response.stop_reason != "tool_use":
         # No tool needed — extract and return the plain text response.
+        # Use next(..., None) so a missing TextBlock (e.g. if a ThinkingBlock
+        # consumed the full token budget) returns None instead of raising
+        # StopIteration and crashing the request.
         direct_text = next(
-            block.text
-            for block in first_response.content
-            if block.type == "text"
+            (block.text for block in first_response.content if block.type == "text"),
+            None,
         )
+        if direct_text is None:
+            print(
+                "[agent] WARNING: no TextBlock found in direct response "
+                f"(stop_reason={first_response.stop_reason!r}, "
+                f"content={first_response.content!r})"
+            )
+            direct_text = (
+                "I wasn't able to generate a complete response. "
+                "Please try rephrasing your question."
+            )
         print("[agent] Claude answered directly (no tool call).")
         # Record Claude's direct answer as the output of the root span.
         get_client().update_current_span(output={"answer": direct_text})
@@ -401,22 +413,40 @@ def ask_agent(user_question: str) -> str:
     print(json.dumps(messages, indent=2, default=str))
     print("[debug] ── end of payload ──\n")
 
+    # The second call is synthesis-only: Claude has the tool results and just
+    # needs to write a plain-English answer.  We intentionally omit tools=
+    # here for two reasons:
+    #   1. Claude doesn't need to select or call tools again.
+    #   2. Omitting tools removes the main trigger for an extended-thinking
+    #      (ThinkingBlock) appearing before the TextBlock, which could exhaust
+    #      max_tokens and leave no budget for the actual answer text.
+    # max_tokens is raised to 4096 so there is ample budget for a thorough
+    # synthesis even if some internal reasoning does occur.
     second_response = client.messages.create(
         model=MODEL,
-        max_tokens=1024,
+        max_tokens=4096,
         system=SYSTEM_PROMPT,
-        tools=TOOLS,
         messages=messages,
     )
 
     # ── Step F: Extract and return Claude's final answer ──────────────────
     # Claude now has the real data and writes its natural-language answer.
-
+    # Use next(..., None) so a missing TextBlock causes a graceful fallback
+    # instead of a StopIteration crash.
     final_text = next(
-        block.text
-        for block in second_response.content
-        if block.type == "text"
+        (block.text for block in second_response.content if block.type == "text"),
+        None,
     )
+    if final_text is None:
+        print(
+            "[agent] WARNING: no TextBlock found in final response "
+            f"(stop_reason={second_response.stop_reason!r}, "
+            f"content={second_response.content!r})"
+        )
+        final_text = (
+            "I retrieved the data but couldn't generate a complete response. "
+            "Please try rephrasing your question."
+        )
 
     print("[agent] Claude produced final answer.")
     # Record the tool-assisted final answer as the output of the root span.

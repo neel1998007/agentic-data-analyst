@@ -52,6 +52,8 @@ class AskRequest(BaseModel):
 
 class AskResponse(BaseModel):
     answer: str
+    tools_called: list[str] = []
+    """Names of the tools the agent invoked to produce this answer (empty if answered from general knowledge)."""
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
@@ -89,4 +91,7 @@ def ask(request: AskRequest) -> AskResponse:
             detail=f"The agent encountered an error: {exc}",
         )
 
-    return AskResponse(answer=result["answer"])
+    return AskResponse(
+        answer=result["answer"],
+        tools_called=result.get("tools_called", []),
+    )
