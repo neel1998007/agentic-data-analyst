@@ -89,6 +89,42 @@
   white-space: pre-wrap;
 }
 
+/* ReactMarkdown renders real block elements; normalise them inside the bubble */
+.message-answer-body {
+  line-height: 1.55;
+}
+
+.message-answer-body > *:first-child { margin-top: 0; }
+.message-answer-body > *:last-child  { margin-bottom: 0; }
+
+.message-answer-body p   { margin: 0.35em 0; }
+.message-answer-body ul,
+.message-answer-body ol  { margin: 0.35em 0; padding-left: 1.4em; }
+.message-answer-body li  { margin: 0.15em 0; }
+
+.message-answer-body code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  background: #e5e7eb;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+.message-answer-body pre {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 0.7rem 1rem;
+  border-radius: 0.4rem;
+  overflow-x: auto;
+  font-size: 0.82em;
+}
+
+.message-answer-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
 /* ── Reasoning trace ─────────────────────────────────────────────────────── */
 
 .reasoning-trace {

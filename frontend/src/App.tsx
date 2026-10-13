@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { askAgent } from './api/client'
 import './App.css'
 
@@ -98,7 +99,9 @@ export default function App() {
             </div>
             <div className="message-answer">
               <span className="message-label">Agent</span>
-              <p>{msg.answer}</p>
+              <div className="message-answer-body">
+                <ReactMarkdown>{msg.answer}</ReactMarkdown>
+              </div>
               <ReasoningTrace toolsCalled={msg.toolsCalled} />
             </div>
           </div>

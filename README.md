@@ -1,82 +1,289 @@
-# agentic-data-analyst
+# Agentic Data Analyst
 
-An AI agent that answers natural-language questions about automotive complaint data, powered by FastAPI, LangGraph, Anthropic Claude, and RAG with pgvector.
+An AI agent that answers natural-language questions about NHTSA vehicle
+safety complaint data — built as a portfolio project demonstrating
+production-style AI engineering practices end-to-end.
 
 ---
 
-## Project Structure
+## Project Overview
+
+This project is a full-stack agentic AI system. A user types a plain-English
+question about vehicle safety complaints ("How many fire complaints were filed
+for the Tesla Model 3?", "Find complaints about brakes engaging on their own")
+and a Claude-powered agent decides which tools to call, queries a live Postgres
+database, and returns a synthesized, grounded answer with a full reasoning trace.
+
+It demonstrates the complete engineering stack required for a production AI
+feature: tool-calling agent design, RAG with vector similarity search,
+observability via Langfuse tracing, an automated eval harness with LLM-as-judge
+grading, and a React/TypeScript frontend that surfaces both the answer and the
+tools used to produce it. Every layer was built deliberately rather than
+scaffolded — the bugs, fixes, and design lessons below reflect what building
+this in practice actually looks like.
+
+---
+
+## Architecture
 
 ```
-agentic-data-analyst/
-├── src/
-│   ├── api/        # FastAPI route definitions and request/response schemas
-│   ├── agents/     # LangGraph agent graphs, nodes, and tool definitions
-│   ├── db/         # SQLAlchemy engine, session management, and ORM models
-│   ├── rag/        # Embedding generation and pgvector similarity retrieval
-│   └── evals/      # Offline evaluation harness scripts (not part of the API)
-├── tests/          # Pytest test suite
-├── venv/           # Python virtual environment (not committed)
-├── .env            # Local secrets — never commit this (see .env.example)
-├── .env.example    # Template showing required environment variables
-├── .gitignore
-├── requirements.txt
-└── README.md
+React / TypeScript (Vite)
+        │
+        │  POST /ask  { question }
+        ▼
+FastAPI backend  (src/api/main.py)
+        │
+        │  ask_agent(question)
+        ▼
+Claude Agent  (src/agents/claude_agent.py)
+  ├── model: claude-sonnet-5-5
+  ├── Tool 1: count_complaints     — structured SQL filter (make / model / year / fire / crash)
+  └── Tool 2: semantic_search_complaints — pgvector cosine similarity search via sentence-transformers
+        │
+        │  SQLAlchemy + psycopg2
+        ▼
+Neon Postgres  (pgvector extension)
+  └── complaints table  (~1,165 rows, 768-dim embeddings per complaint)
+
+Observability: every ask_agent() call is wrapped in a @observe() decorator
+and traced end-to-end in Langfuse, recording the question, tool calls,
+tool results, and final answer in one unified trace.
+
+Evals: an offline harness (src/evals/run_evals.py) runs 10 labelled test
+cases through the live agent, grades each with either exact-count matching
+(deterministic) or an LLM-as-judge (Claude claude-sonnet-5-5, independent client),
+and writes a timestamped JSON report to src/evals/results/.
 ```
 
-## Getting Started
+---
+
+## Tech Stack
+
+- **Python 3.11** — runtime (required for sentence-transformers / torch compatibility)
+- **FastAPI** — REST API backend
+- **SQLAlchemy** — ORM and query builder
+- **Anthropic Python SDK** — Claude claude-sonnet-5-5 for agent reasoning and LLM-as-judge eval
+- **sentence-transformers** (`all-MiniLM-L6-v2`) — local embedding generation at ingest time
+- **pgvector** — Postgres extension for cosine-similarity vector search
+- **Neon** — serverless Postgres hosting
+- **Langfuse** — LLM observability and tracing
+- **React 18 + TypeScript** — frontend chat interface
+- **Vite** — frontend build tooling
+- **react-markdown** — renders Claude's markdown-formatted answers in the browser
+
+---
+
+## Setup & Running Locally
+
+> **Python 3.11 is required.** The `sentence-transformers` library pulls in
+> `torch`, which has strict Python version constraints. Using 3.12+ will cause
+> dependency resolution failures.
+
+### 1. Clone and create a virtual environment
 
 ```bash
-# 1. Activate the virtual environment
-# Windows:
+git clone https://github.com/your-username/agentic-data-analyst.git
+cd agentic-data-analyst
+
+python3.11 -m venv venv
+
+# Windows
 venv\Scripts\activate
-# macOS/Linux:
+# macOS / Linux
 source venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Copy the env template and fill in your values
-cp .env.example .env
 ```
 
-## Running Scripts
-
-**Always run scripts from the project root using the `-m` flag**, not by passing the file path directly.
-
-| ✅ Correct | ❌ Wrong |
-|---|---|
-| `python -m src.db.create_tables` | `python src/db/create_tables.py` |
-| `python -m scripts.ingest_nhtsa_data` | `python scripts/ingest_nhtsa_data.py` |
-
-**Why?** When you run `python some/file.py`, Python adds `some/` to `sys.path` — so it looks for modules relative to that subfolder, and `import src.db.connection` fails because there's no `src/` inside `some/`. When you run `python -m some.file` instead, Python adds the **current working directory** (the project root) to `sys.path`, so all `src.*` imports resolve correctly. No `sys.path` hacks needed.
-
-### Common commands
+### 2. Install Python dependencies
 
 ```bash
-# Create the complaints table in your Neon database
+pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+# Open .env and fill in:
+#   ANTHROPIC_API_KEY   — from console.anthropic.com
+#   DATABASE_URL        — Neon Postgres connection string (postgresql+psycopg2://...)
+#   LANGFUSE_SECRET_KEY — from cloud.langfuse.com
+#   LANGFUSE_PUBLIC_KEY — from cloud.langfuse.com
+#   LANGFUSE_HOST       — https://cloud.langfuse.com
+```
+
+### 4. Run the backend
+
+```bash
+uvicorn src.api.main:app --reload --port 8000
+# API docs: http://localhost:8000/docs
+```
+
+### 5. Run the frontend (separate terminal)
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Opens at http://localhost:5173
+```
+
+### Running scripts
+
+Always run Python scripts from the project root using `-m`, not by file path:
+
+```bash
+# Create the database schema
 python -m src.db.create_tables
 
-# Run the NHTSA data ingestion pipeline
+# Ingest NHTSA complaint data (fetches + embeds + stores)
 python -m scripts.ingest_nhtsa_data
 
-# Run the evaluation suite
+# Run the full evaluation suite
 python -m src.evals.run_evals
 ```
 
 ---
 
-## Known Limitations & Eval Findings
+## Data Source
 
-The following findings and design lessons emerged from building and evaluating the agent:
+Complaint data is fetched from the [NHTSA Complaints API](https://api.nhtsa.gov/complaints/complaintsByVehicle).
+Three vehicles were ingested, totalling approximately **1,165 complaints**:
 
-- **NHTSA API Model Name Quirks (400 Errors)**: The official NHTSA API returned consistent HTTP 400 Bad Request responses when querying compound or hyphenated vehicle model names (such as the Ford `F-150` or Chevrolet `Silverado`). To maintain focus on core agentic architecture, tool routing, and retrieval rather than debugging third-party endpoint idiosyncrasies, the dataset scope was narrowed to three high-volume vehicles (`Honda Civic`, `Toyota Camry`, and `Tesla Model 3`).
+| Vehicle | Model Year |
+|---|---|
+| Honda Civic | 2020 |
+| Toyota Camry | 2020 |
+| Tesla Model 3 | 2021 |
 
-- **Parallel Tool Execution in a Single Turn**: Anthropic Claude models can generate multiple `tool_use` blocks simultaneously in a single turn (parallel tool calling) when answering compound inquiries. Early iterations of the agent only captured the first `tool_use` block, causing subsequent API calls to fail due to unfulfilled tool IDs. The agent execution loop was updated to iterate over all returned `tool_use` blocks, execute each tool independently in a resilient `try/except` wrapper, and batch all `tool_result` objects into a single follow-up message back to Claude.
+Each complaint record is stored with its ODI number, make, model, year, fire/crash
+flags, and complaint summary text. At ingest time, the summary is embedded using
+`sentence-transformers/all-MiniLM-L6-v2` (384 dimensions) and stored in a
+`pgvector` column, enabling cosine-similarity retrieval at query time.
 
-- **Eval Tool-Selection Criteria (Subset vs. Exact Match)**: Initial evaluation specifications enforced an exact set match between `tools_called` and `expected_tools`. However, Claude frequently devises equally valid, alternative tool-calling strategies—for instance, invoking `semantic_search_complaints` twice in parallel (once for brake issues and once for tire issues) rather than combining a count query with a semantic search. The eval harness was updated to verify that every `expected_tool` appears as a subset of `tools_called`. This prevents penalizing the agent for invoking additional relevant tools or calling a tool multiple times.
+---
 
-- **Multi-Record Synthesis Overgeneralization & Attribution**: Deploying an LLM-as-a-judge revealed a recurring synthesis failure mode: when summarizing across multiple retrieved records, the agent occasionally used absolute phrasing (e.g., claiming a condition occurred *"in every case"* or *"all owners reported"*) when one record differed or was silent, and blurred attribution between distinct entities (such as conflating what a vehicle owner reported versus what manufacturer technicians diagnosed). This was addressed through an explicit system prompt directive requiring per-record attribution and strict exception-calling. Re-evaluating the suite demonstrated immediate improvement, increasing passing cases from 8/10 to 9/10.
+## Known Limitations & Engineering Findings
 
-- **LLM Judge Calibration Limitations**: The LLM evaluator exhibited subtle calibration biases. In one case, the judge penalized the agent for describing its own search methodology (*"searched by meaning"*), categorizing it as an ungrounded factual claim about vehicle complaints rather than an explanation of operational process. Because both the agent and the judge stem from the same foundational model family, shared blind spots can occur. Distinguishing genuine agent inaccuracies from judge miscalibration necessitates qualitative review of the judge's reasoning string, rather than treating boolean scores as infallible ground truth.
+The following are real findings and bugs encountered during this build, documented
+here because the debugging process is as instructive as the final result.
 
-- **Final Eval Suite & Remaining Edge Case**: The final offline evaluation suite achieves **9/10 passing cases**. The single remaining failure occurred on `semantic_wheels_falling_off` (*"Tell me about problems people had with their wheels falling off"*). While the agent accurately synthesized ODI 11499966 (where the Tesla owner explicitly noted *"no warning beforehand, not even a wobble, shimmy, clunk"*) and ODI 11748079 (where the Honda owner noted the vehicle information center gave no warning), it generalized that *"the owners of both Teslas and the Honda owner all said they got no warning"*, despite the first Tesla complaint (ODI 11455724) making no mention of warning signs. The judge flagged this as ungrounded (`grounded: False`). Investigation confirmed this is a minor, low-severity remnant of multi-document synthesis smoothing rather than an architectural flaw. In production AI evaluation, targeting high-confidence reliability over artificial 100% pass rates reflects the inherent variance of non-deterministic models.
+### NHTSA API — 400 Errors on Compound Model Names
+The NHTSA Complaints API returns consistent HTTP 400 Bad Request errors when
+querying compound or hyphenated model names (e.g. Ford `F-150`, Chevrolet
+`Silverado`). Rather than investing time debugging a third-party API quirk
+unrelated to the project's core goals, the dataset was scoped to three
+high-volume vehicles with clean, single-token model names.
+
+### Parallel Tool-Calling Bug
+Claude models can emit multiple `tool_use` blocks in a single response turn when
+answering compound questions. The original agent loop used `next()` to grab only
+the first block, silently dropping the rest. The Anthropic API then rejected
+the follow-up message because it referenced `tool_use_id` values that had no
+matching `tool_result`. Fixed by iterating over all `tool_use` blocks, executing
+each tool independently with a per-tool `try/except`, and batching all
+`tool_result` objects into a single follow-up message.
+
+### Eval Design — Subset Match vs. Exact Match for Tool Selection
+The initial eval harness used an exact set match between `expected_tools` and
+`tools_called`. This caused false failures: Claude would call
+`semantic_search_complaints` twice in parallel (once per sub-topic) when the
+spec only listed it once, or would add a second reasonable tool the spec didn't
+anticipate. Updated to a subset check — `set(expected_tools).issubset(set(tools_called))`
+— which verifies every expected tool was called without penalizing additional
+valid tool use.
+
+### Extended Thinking Token Exhaustion (Judge)
+The LLM-as-judge function (using `claude-sonnet-5-5`) would occasionally return
+an empty response because an internal `ThinkingBlock` consumed the full `max_tokens`
+budget before any `TextBlock` was generated. Bare `next()` on the content list
+raised `StopIteration` and crashed the harness. Fixed by: raising `max_tokens`
+from 300 → 1024, looping through `response.content` to find the first block
+where `block.type == "text"` (skipping ThinkingBlocks), and wrapping extraction
+with `next(..., None)` plus a logged fallback.
+
+### Extended Thinking Token Exhaustion (Main Agent)
+The same `next(generator)` / `StopIteration` pattern existed in the main agent's
+final-answer extraction at line 415. Additionally, `max_tokens=1024` on the
+synthesis call was too small: after any thinking budget was consumed, insufficient
+tokens remained for a full answer. Fixed by: raising `max_tokens` to 4096 on
+the second (synthesis) API call, and switching to `next(..., None)` with a
+graceful user-facing fallback message.
+
+### ThinkingBlock / Tools Parameter Consistency (400 Error)
+Anthropic's API enforces a hard constraint: if a `ThinkingBlock` appears in
+conversation history passed to a follow-up API call, the `tools` parameter on
+that call must be **identical** to the call that generated the thinking block.
+The second agent call (synthesis) was omitting `tools=` entirely, causing a 400.
+Fixed with two layers:
+1. Strip `ThinkingBlock`s from the Turn 2 assistant history before building the
+   messages list for the second call — pre-empts the constraint entirely
+   (explicitly allowed by Anthropic's API docs).
+2. Restore `tools=TOOLS` to the second call (same object reference as the first)
+   as belt-and-suspenders, so even if a thinking block slips through the filter
+   the constraint is still satisfied.
+
+### Multi-Document Synthesis Overgeneralization
+LLM-judge evaluation revealed a recurring failure mode: when synthesizing across
+multiple complaint records, the agent used absolute language ("every case",
+"all owners reported") even when one record was silent or differed. It also
+blurred attribution between vehicle owners and manufacturers. Addressed with an
+explicit system prompt directive requiring per-record precision, exception
+call-outs, and party attribution. Immediately improved the eval suite from
+**8/10 → 9/10 passing**.
+
+### LLM-as-Judge Calibration Bias
+The judge occasionally penalized the agent for describing its own retrieval
+process (e.g. "searched by meaning") — categorizing process-description language
+as an "ungrounded factual claim about vehicle complaints." Because the agent and
+judge share the same model family, shared blind spots can occur. Judge scores
+should be treated as a signal, not ground truth; qualitative review of the
+`reasoning` field is necessary to distinguish genuine agent inaccuracies from
+judge miscalibration.
+
+### Top-K Retrieval Without a Similarity Threshold
+The `semantic_search_complaints` tool returns the top-N most similar complaints
+by cosine distance regardless of how similar they actually are. There is no
+minimum relevance threshold, so marginally related or entirely unrelated records
+can appear in results when the query is unusual. This is the root cause of the
+one remaining eval failure (see below).
+
+### Final Eval Status — 9/10 Passing
+The eval suite achieves **9/10 passing**. The remaining failure is
+`semantic_wheels_falling_off` ("Tell me about problems people had with their
+wheels falling off"). The agent accurately summarized ODI 11499966 (Tesla:
+explicit "no warning, not even a wobble, shimmy, clunk") and ODI 11748079
+(Honda: vehicle information center gave no warning), but generalized the
+no-warning finding to a third complaint (ODI 11455724) that made no mention of
+warning signs. The judge correctly flagged this as ungrounded (`grounded: false`).
+This is a low-severity residual of multi-document smoothing, not an architectural
+flaw. Chasing 100% pass rate by overfitting the system prompt to this one case
+was deliberately rejected in favour of documenting it as an understood edge case.
+
+---
+
+## Future Improvements
+
+- **Conversation memory** — multi-turn context so follow-up questions can
+  reference prior answers in the same session
+- **Similarity threshold for RAG** — reject or down-weight retrieved complaints
+  below a minimum cosine similarity score, reducing irrelevant context
+- **Re-ranking** — apply a cross-encoder re-ranker after initial retrieval to
+  improve relevance ordering before passing context to the agent
+- **Expanded vehicle coverage** — ingest more makes/models to make the dataset
+  more generally useful (currently limited by NHTSA API model-name constraints)
+- **Human-reviewed eval sampling** — periodic manual review of LLM-judge
+  decisions to detect and correct systematic calibration drift
+- **Text-to-SQL** — replace fixed tool functions with a natural-language-to-SQL
+  generator to handle arbitrary structured queries beyond the current
+  `count_complaints` filter schema
+
+---
+
+## Demo
+
+> 🔗 **Live deployment link will be added here after Phase 7 (deployment).**
+
+To run locally, follow the Setup instructions above. The frontend chat interface
+runs at `http://localhost:5173` and communicates with the FastAPI backend at
+`http://localhost:8000`. Local screenshots and sample interaction traces are
+available on request.

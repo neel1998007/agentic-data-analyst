@@ -378,16 +378,36 @@ def ask_agent(user_question: str) -> str:
     #                        an API error — every result for a given
     #                        assistant turn must arrive together.
 
+    # Strip ThinkingBlocks from the assistant turn before building the history
+    # for the second API call.  Two reasons:
+    #   1. ThinkingBlocks carry large base64 signatures that bloat the payload
+    #      with no value for the synthesis step.
+    #   2. Anthropic's API requires that if a ThinkingBlock is present in the
+    #      conversation history, the `tools` parameter on the follow-up call
+    #      must be IDENTICAL to the one used when the ThinkingBlock was
+    #      generated.  Removing the blocks pre-emptively sidesteps this
+    #      constraint entirely, so tool-list changes can never cause a 400.
+    #   Stripping ThinkingBlocks from history is explicitly allowed by the
+    #   Anthropic API documentation.
+    assistant_content_for_history = [
+        block.model_dump()
+        for block in first_response.content
+        if block.type != "thinking"
+    ]
+    thinking_stripped = len(first_response.content) - len(assistant_content_for_history)
+    if thinking_stripped:
+        print(f"[agent] Stripped {thinking_stripped} ThinkingBlock(s) from Turn 2 history.")
+
     messages = [
         # Turn 1 — original question
         {"role": "user", "content": user_question},
 
-        # Turn 2 — Claude's full first response as plain dicts.
+        # Turn 2 — Claude's first response, ThinkingBlocks removed.
         # model_dump() converts each Pydantic content block to a dict the
         # API serialiser can handle cleanly (no __dict__ guesswork needed).
         {
             "role": "assistant",
-            "content": [block.model_dump() for block in first_response.content],
+            "content": assistant_content_for_history,
         },
 
         # Turn 3 — ALL tool results in ONE user message.
@@ -414,18 +434,18 @@ def ask_agent(user_question: str) -> str:
     print("[debug] ── end of payload ──\n")
 
     # The second call is synthesis-only: Claude has the tool results and just
-    # needs to write a plain-English answer.  We intentionally omit tools=
-    # here for two reasons:
-    #   1. Claude doesn't need to select or call tools again.
-    #   2. Omitting tools removes the main trigger for an extended-thinking
-    #      (ThinkingBlock) appearing before the TextBlock, which could exhaust
-    #      max_tokens and leave no budget for the actual answer text.
+    # needs to write a plain-English answer.
+    # IMPORTANT: tools= must be IDENTICAL to the first call.  If any
+    # ThinkingBlock survived into the conversation history (we strip them
+    # above, but as a belt-and-suspenders measure) Anthropic's API requires
+    # the tools list to match exactly or it returns a 400 error.
     # max_tokens is raised to 4096 so there is ample budget for a thorough
-    # synthesis even if some internal reasoning does occur.
+    # synthesis even after any internal reasoning budget is consumed.
     second_response = client.messages.create(
         model=MODEL,
         max_tokens=4096,
         system=SYSTEM_PROMPT,
+        tools=TOOLS,
         messages=messages,
     )
 
