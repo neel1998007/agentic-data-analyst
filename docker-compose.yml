@@ -1,0 +1,22 @@
+services:
+
+  # ── FastAPI backend ─────────────────────────────────────────────────────────
+  backend:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: always
+
+  # ── React + Nginx frontend ──────────────────────────────────────────────────
+  # Nginx serves the compiled SPA and proxies /ask and /health to the backend.
+  # depends_on ensures the backend container starts before the frontend, though
+  # it does not wait for the backend to be healthy — add a healthcheck to
+  # the backend service if you need that guarantee.
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always

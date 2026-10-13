@@ -5,7 +5,10 @@
 
 import type { AskResponse } from '../types/api';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Use a relative URL so the request always goes to the same origin.
+// In development (Vite dev server) configure the proxy in vite.config.ts;
+// in Docker, Nginx proxies /ask and /health to the FastAPI backend.
+const API_BASE_URL = '';
 
 /**
  * Send a natural-language question to the backend agent and return
@@ -24,7 +27,7 @@ export async function askAgent(question: string): Promise<AskResponse> {
     });
   } catch (networkError) {
     throw new Error(
-      `Network request failed – is the backend running at ${API_BASE_URL}? (${networkError})`
+      `Network request failed – could not reach /ask. Is the backend running? (${networkError})`
     );
   }
 

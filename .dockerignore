@@ -1,0 +1,40 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environment ───────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Frontend build artifacts ──────────────────────────────────────────────────
+# node_modules can be hundreds of MB; the backend image doesn't need them.
+frontend/node_modules/
+frontend/dist/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# Never bake .env into the image — pass secrets via environment variables or
+# Docker secrets at runtime.
+.env
+
+# ── Version control ───────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Eval results ─────────────────────────────────────────────────────────────
+# Timestamped JSON reports from offline eval runs — not needed at runtime.
+src/evals/results/
+
+# ── Editor / OS noise ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Test artifacts ────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
