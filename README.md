@@ -27,12 +27,15 @@ this in practice actually looks like.
 ## Architecture
 
 ```
-React / TypeScript (Vite)
-        │
-        │  POST /ask  { question }
+Browser
+        │  GET /  (static HTML/JS/CSS)
         ▼
-FastAPI backend  (src/api/main.py)
-        │
+Nginx  (frontend container, port 80)
+  ├── Serves React SPA static files from /usr/share/nginx/html
+  └── Reverse-proxies /ask and /health → http://backend:8000
+        │  Docker internal network
+        ▼
+FastAPI backend  (src/api/main.py, backend container, port 8000)
         │  ask_agent(question)
         ▼
 Claude Agent  (src/agents/claude_agent.py)
@@ -43,7 +46,12 @@ Claude Agent  (src/agents/claude_agent.py)
         │  SQLAlchemy + psycopg2
         ▼
 Neon Postgres  (pgvector extension)
-  └── complaints table  (~1,165 rows, 768-dim embeddings per complaint)
+  └── complaints table  (~1,165 rows, 384-dim embeddings per complaint)
+
+Deployment: two containers orchestrated by Docker Compose. The React app
+is built to static files at image build time (multi-stage Dockerfile);
+Nginx serves them and proxies API routes to the FastAPI container over
+Docker's internal network so no CORS configuration is needed.
 
 Observability: every ask_agent() call is wrapped in a @observe() decorator
 and traced end-to-end in Langfuse, recording the question, tool calls,
@@ -51,7 +59,7 @@ tool results, and final answer in one unified trace.
 
 Evals: an offline harness (src/evals/run_evals.py) runs 10 labelled test
 cases through the live agent, grades each with either exact-count matching
-(deterministic) or an LLM-as-judge (Claude claude-sonnet-5-5, independent client),
+(deterministic) or an LLM-as-judge (claude-sonnet-5-5, independent client),
 and writes a timestamped JSON report to src/evals/results/.
 ```
 
@@ -62,7 +70,7 @@ and writes a timestamped JSON report to src/evals/results/.
 - **Python 3.11** — runtime (required for sentence-transformers / torch compatibility)
 - **FastAPI** — REST API backend
 - **SQLAlchemy** — ORM and query builder
-- **Anthropic Python SDK** — Claude claude-sonnet-5-5 for agent reasoning and LLM-as-judge eval
+- **Anthropic Python SDK** — `claude-sonnet-5-5` for agent reasoning and LLM-as-judge eval
 - **sentence-transformers** (`all-MiniLM-L6-v2`) — local embedding generation at ingest time
 - **pgvector** — Postgres extension for cosine-similarity vector search
 - **Neon** — serverless Postgres hosting
@@ -70,16 +78,48 @@ and writes a timestamped JSON report to src/evals/results/.
 - **React 18 + TypeScript** — frontend chat interface
 - **Vite** — frontend build tooling
 - **react-markdown** — renders Claude's markdown-formatted answers in the browser
+- **Docker + Docker Compose** — containerises both services for reproducible deployment
+- **Nginx** — serves the compiled React SPA and reverse-proxies API routes to FastAPI
 
 ---
 
 ## Setup & Running Locally
 
+### Option A: Run with Docker Compose (recommended)
+
+Requires Docker Desktop (or Docker Engine + Compose plugin) installed.
+
+```bash
+git clone https://github.com/your-username/agentic-data-analyst.git
+cd agentic-data-analyst
+
+# Copy the env template and fill in your API keys
+cp .env.example .env
+# Open .env and fill in:
+#   ANTHROPIC_API_KEY   — from console.anthropic.com
+#   DATABASE_URL        — Neon Postgres connection string (postgresql+psycopg2://...)
+#   LANGFUSE_SECRET_KEY — from cloud.langfuse.com
+#   LANGFUSE_PUBLIC_KEY — from cloud.langfuse.com
+#   LANGFUSE_HOST       — https://cloud.langfuse.com
+
+# Build images and start both services in the background
+docker compose up -d --build
+```
+
+The app is then available at **http://localhost** (port 80, served by Nginx).
+The FastAPI backend is also directly reachable at **http://localhost:8000/docs**.
+
+To stop: `docker compose down`
+
+---
+
+### Option B: Run manually (two terminals)
+
 > **Python 3.11 is required.** The `sentence-transformers` library pulls in
 > `torch`, which has strict Python version constraints. Using 3.12+ will cause
 > dependency resolution failures.
 
-### 1. Clone and create a virtual environment
+#### 1. Clone and create a virtual environment
 
 ```bash
 git clone https://github.com/your-username/agentic-data-analyst.git
@@ -93,41 +133,37 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 2. Install Python dependencies
+#### 2. Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure environment variables
+#### 3. Configure environment variables
 
 ```bash
 cp .env.example .env
-# Open .env and fill in:
-#   ANTHROPIC_API_KEY   — from console.anthropic.com
-#   DATABASE_URL        — Neon Postgres connection string (postgresql+psycopg2://...)
-#   LANGFUSE_SECRET_KEY — from cloud.langfuse.com
-#   LANGFUSE_PUBLIC_KEY — from cloud.langfuse.com
-#   LANGFUSE_HOST       — https://cloud.langfuse.com
+# Open .env and fill in the same keys listed in Option A above.
 ```
 
-### 4. Run the backend
+#### 4. Run the backend
 
 ```bash
 uvicorn src.api.main:app --reload --port 8000
 # API docs: http://localhost:8000/docs
 ```
 
-### 5. Run the frontend (separate terminal)
+#### 5. Run the frontend (separate terminal)
 
 ```bash
 cd frontend
 npm install
 npm run dev
 # Opens at http://localhost:5173
+# Vite proxies /ask and /health to localhost:8000 automatically.
 ```
 
-### Running scripts
+### Running data pipeline scripts
 
 Always run Python scripts from the project root using `-m`, not by file path:
 
@@ -259,6 +295,27 @@ This is a low-severity residual of multi-document smoothing, not an architectura
 flaw. Chasing 100% pass rate by overfitting the system prompt to this one case
 was deliberately rejected in favour of documenting it as an understood edge case.
 
+### CUDA Torch Bloat During Docker Build
+Pip's default index includes the full CUDA-enabled GPU build of `torch` (a
+dependency of `sentence-transformers`), which is several gigabytes. On the
+deployment VM (Google Cloud e2-micro, 1 vCPU, 1 GB RAM, 10 GB disk), the
+default install ran for ~40 minutes and ultimately corrupted the Docker image
+export step with `failed call to UtimesNanoAt` — a containerd/overlayfs error
+consistent with disk I/O exhaustion from writing a multi-GB image. Fixed by
+adding `--extra-index-url https://download.pytorch.org/whl/cpu` to
+`requirements.txt`, which forces pip to resolve the CPU-only torch wheel
+(~200 MB instead of ~2 GB). The fix is committed to the repo so any
+subsequent `docker compose up --build` completes in a few minutes.
+
+### 1 GB RAM Deployment Constraint & Swap
+The deployment target (Google Cloud e2-micro free tier) has 1 GB RAM shared
+across Nginx, FastAPI, and the in-memory `sentence-transformers` model. The
+Linux OOM killer terminated the backend process under memory pressure on first
+deploy. Mitigated by provisioning a 2 GB swap file on the VM and making it
+persistent via `/etc/fstab`. This is an explicit, documented tradeoff:
+performance is suboptimal (swap is slow) but acceptable for a low-traffic
+portfolio demo that doesn't require sub-second inference latency.
+
 ---
 
 ## Future Improvements
@@ -276,14 +333,21 @@ was deliberately rejected in favour of documenting it as an understood edge case
 - **Text-to-SQL** — replace fixed tool functions with a natural-language-to-SQL
   generator to handle arbitrary structured queries beyond the current
   `count_complaints` filter schema
+- **HTTPS + custom domain** — add a domain name and provision a TLS certificate
+  via Let's Encrypt / Certbot; currently the deployment runs plain HTTP because
+  no custom domain is configured for this project
+- **Docker buildx plugin** — the current build uses Docker's deprecated legacy
+  builder; migrating to `buildx` enables multi-platform builds and BuildKit
+  cache mounts for faster CI/CD pipelines
 
 ---
 
 ## Demo
 
-> 🔗 **Live deployment link will be added here after Phase 7 (deployment).**
+🔗 **Live deployment: http://34.61.231.215/**
 
-To run locally, follow the Setup instructions above. The frontend chat interface
-runs at `http://localhost:5173` and communicates with the FastAPI backend at
-`http://localhost:8000`. Local screenshots and sample interaction traces are
-available on request.
+The app runs over plain HTTP (no custom domain or TLS configured). Nginx serves
+the React frontend on port 80 and proxies `/ask` requests to the FastAPI
+backend container on the same VM.
+
+To run locally, follow the Setup instructions above.
